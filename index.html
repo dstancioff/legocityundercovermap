@@ -13,31 +13,71 @@
            crossorigin=""></script>
         <script>
             var language, debug, tiles;
+            var sidebarState = {
+                openCategories: {},
+                openEntries: {},
+            };
+
+            function get_show_completed() {
+                // Sidebar filter is "Hide completed".
+                var hideCompleted = document.getElementById('hideCompleted');
+                if (!hideCompleted) return false;
+                return !hideCompleted.checked;
+            }
+
+            function get_search_query() {
+                var el = document.getElementById('sidebarSearch');
+                if (!el) return '';
+                return (el.value || '').trim().toLowerCase();
+            }
+
+            function marker_matches_query(markers, marker_type, marker_i) {
+                var q = get_search_query();
+                if (!q) return true;
+
+                var marker = markers[marker_type]["markers"][marker_i];
+
+                var title = marker_title_text(marker, marker_type);
+                var catTitle = marker_type;
+                if (markers[marker_type]["title"] && language in markers[marker_type]["title"]) {
+                    catTitle = markers[marker_type]["title"][language];
+                }
+
+                var desc = marker.description ? marker.description : '';
+
+                var haystack = (title + ' ' + catTitle + ' ' + desc).toLowerCase();
+                return haystack.indexOf(q) !== -1;
+            }
+
             function update_markers(mymap, markers) {
                 var marker_type;
+                var showCompleted = get_show_completed();
+
                 for (marker_type in markers) {
                     for (marker_i in markers[marker_type]["markers"]) {
                         var marker = markers[marker_type]["markers"][marker_i];
                         if (marker.tiles != tiles) {
                             continue;
                         }
+
                         var visibility = undefined;
 
-                        var showcompleted = L.DomUtil.get("showcompleted"), showcompleted_selected;
-                        if (showcompleted) {
-                            showcompleted_selected = L.DomUtil.hasClass(showcompleted, "selected");
+                        // Base visibility comes from category show/hide.
+                        if (marker._visibility != markers[marker_type].visibility) {
+                            visibility = markers[marker_type].visibility;
                         }
 
-                        if (marker.completed && !showcompleted_selected) {
-                            if (marker._visibility == "visible") {
-                                visibility = "hidden";
-                            }
-                        } else {
-                            if (marker._visibility != markers[marker_type].visibility) {
-                                visibility = markers[marker_type].visibility;
-                            }
+                        // Hide completed if requested.
+                        if (visibility !== 'hidden' && marker.completed && !showCompleted) {
+                            visibility = 'hidden';
                         }
-                        if (visibility) {
+
+                        // Search query filter.
+                        if (visibility !== 'hidden' && !marker_matches_query(markers, marker_type, marker_i)) {
+                            visibility = 'hidden';
+                        }
+
+                        if (visibility && marker._visibility != visibility) {
                             if (visibility == "visible") {
                                 marker.marker.addTo(mymap);
                             } else if (visibility == "hidden") {
@@ -48,6 +88,7 @@
                     }
                 }
             }
+
             function update_label_visibility(mymap) {
                 if (mymap.getZoom() >= 5) {
                     L.DomUtil.addClass(mymap.getContainer(), 'show-labels');
@@ -55,11 +96,326 @@
                     L.DomUtil.removeClass(mymap.getContainer(), 'show-labels');
                 }
             }
+
+            function marker_title_text(marker, marker_type) {
+                if (marker.title) {
+                    if (marker.title.constructor == Object) {
+                        if (language in marker.title) {
+                            return marker.title[language];
+                        }
+                        return marker_type;
+                    }
+                    return marker.title;
+                }
+                return marker_type;
+            }
+
+            function serialize_completed(markers) {
+                var marker_type, marker_i;
+                var completed = {};
+
+                for (marker_type in markers) {
+                    for (marker_i in markers[marker_type]["markers"]) {
+                        if (markers[marker_type]["markers"][marker_i].completed) {
+                            if (!completed[marker_type]) {
+                                completed[marker_type] = [];
+                            }
+                            completed[marker_type].push(marker_i);
+                        }
+                    }
+                }
+
+                localStorage.setItem("completed", JSON.stringify(completed));
+            }
+
+            function set_marker_completed(mymap, markers, marker_type, marker_i, completed) {
+                var marker = markers[marker_type]["markers"][marker_i];
+                marker.completed = completed;
+                serialize_completed(markers);
+                update_markers(mymap, markers);
+                update_toggle_all_button(markers);
+                build_sidebar(mymap, markers);
+            }
+
+            function focus_marker(mymap, marker) {
+                var zoom = mymap.getZoom();
+                if (zoom < 5) {
+                    zoom = 5;
+                }
+                mymap.setView(marker["coords"], zoom);
+                if (marker.marker) {
+                    marker.marker.openPopup();
+                }
+            }
+
+            function maybe_zoom_to_search_results(mymap, markers) {
+                var zoomToResults = document.getElementById('zoomToResults');
+                if (!zoomToResults || !zoomToResults.checked) return;
+
+                var q = get_search_query();
+                if (!q) return;
+
+                var points = [];
+                for (var marker_type in markers) {
+                    if (markers[marker_type].visibility != 'visible') continue;
+                    for (var marker_i in markers[marker_type]["markers"]) {
+                        var marker = markers[marker_type]["markers"][marker_i];
+                        if (marker.tiles != tiles) continue;
+                        if (!marker_matches_query(markers, marker_type, marker_i)) continue;
+                        points.push(marker["coords"]);
+                    }
+                }
+
+                if (points.length == 0) return;
+
+                var bounds = L.latLngBounds(points);
+                mymap.fitBounds(bounds, {
+                    padding: [24, 24],
+                    maxZoom: 6,
+                });
+            }
+
+            function build_sidebar(mymap, markers) {
+                var sidebar = document.getElementById('sidebarContent');
+                if (!sidebar) return;
+
+                var showCompleted = get_show_completed();
+
+                sidebar.innerHTML = '';
+
+                var markerTypes = Object.keys(markers);
+                markerTypes.sort(function(a, b) {
+                    var at = (markers[a]["title"] && language in markers[a]["title"]) ? markers[a]["title"][language] : a;
+                    var bt = (markers[b]["title"] && language in markers[b]["title"]) ? markers[b]["title"][language] : b;
+                    return at.localeCompare(bt, undefined, { sensitivity: 'base' });
+                });
+
+                var marker_type;
+                for (var idx = 0; idx < markerTypes.length; idx++) {
+                    marker_type = markerTypes[idx];
+                    // Only show categories that have entries for this tileset.
+
+                    var totalCount = 0;
+                    var completeCount = 0;
+                    for (marker_i in markers[marker_type]["markers"]) {
+                        var markerAll = markers[marker_type]["markers"][marker_i];
+                        if (markerAll.tiles != tiles) continue;
+                        if (!marker_matches_query(markers, marker_type, marker_i)) continue;
+                        totalCount += 1;
+                        if (markerAll.completed) completeCount += 1;
+                    }
+
+                    if (totalCount == 0) continue;
+
+                    var section = document.createElement('section');
+                    section.className = 'sidebar-category';
+                    if (markers[marker_type].visibility != 'visible') {
+                        section.className += ' is-hidden';
+                    }
+
+                    var header = document.createElement('div');
+                    header.className = 'sidebar-category-header';
+
+                    var left = document.createElement('div');
+                    left.className = 'sidebar-category-left';
+
+                    var expand = document.createElement('button');
+                    expand.className = 'sidebar-expand';
+                    expand.type = 'button';
+                    expand.setAttribute('aria-label', 'Toggle category');
+                    expand.textContent = sidebarState.openCategories[marker_type] ? '▾' : '▸';
+
+                    expand.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        var t = this.getAttribute('data-type');
+                        sidebarState.openCategories[t] = !sidebarState.openCategories[t];
+                        update_toggle_all_button(markers);
+                build_sidebar(mymap, markers);
+                    });
+                    expand.setAttribute('data-type', marker_type);
+
+                    var vis = document.createElement('button');
+                    vis.type = 'button';
+                    vis.className = 'sidebar-visibility';
+                    vis.setAttribute('aria-label', 'Show/hide category on map');
+                    vis.textContent = markers[marker_type].visibility == 'visible' ? '👁' : '🚫';
+                    vis.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        var t = this.getAttribute('data-type');
+                        markers[t].visibility = markers[t].visibility == 'visible' ? 'hidden' : 'visible';
+                        update_markers(mymap, markers);
+                        update_toggle_all_button(markers);
+                build_sidebar(mymap, markers);
+                    });
+                    vis.setAttribute('data-type', marker_type);
+
+                    var title = document.createElement('div');
+                    title.className = 'sidebar-category-title';
+                    if (language in markers[marker_type]["title"]) {
+                        title.textContent = markers[marker_type]["title"][language];
+                    } else {
+                        title.textContent = marker_type;
+                    }
+
+                    var counts = document.createElement('div');
+                    counts.className = 'sidebar-category-counts';
+                    counts.textContent = completeCount + ' / ' + totalCount;
+
+                    left.appendChild(vis);
+                    left.appendChild(expand);
+                    left.appendChild(title);
+
+                    header.appendChild(left);
+                    header.appendChild(counts);
+
+                    section.appendChild(header);
+
+                    var progress = document.createElement('div');
+                    progress.className = 'sidebar-category-progress';
+
+                    var progressFill = document.createElement('div');
+                    progressFill.className = 'sidebar-category-progress-fill';
+                    progressFill.style.width = ((completeCount / totalCount) * 100).toFixed(1) + '%';
+
+                    progress.appendChild(progressFill);
+                    section.appendChild(progress);
+ 
+                    var list = document.createElement('ul');
+                    list.className = 'sidebar-entry-list';
+
+                    if (!sidebarState.openCategories[marker_type]) {
+                        list.style.display = 'none';
+                    }
+
+                    // Use the full markers list to keep indices stable.
+                    for (marker_i in markers[marker_type]["markers"]) {
+                        var marker = markers[marker_type]["markers"][marker_i];
+                        if (marker.tiles != tiles) continue;
+
+                        if (!marker_matches_query(markers, marker_type, marker_i)) continue;
+                        if (!showCompleted && marker.completed) continue;
+
+                        var entryId = marker_type + ':' + marker_i;
+
+                        var li = document.createElement('li');
+                        li.className = 'sidebar-entry';
+                        if (marker.completed) {
+                            li.className += ' completed';
+                        }
+
+                        var row = document.createElement('div');
+                        row.className = 'sidebar-entry-row';
+
+                        var entryTitle = document.createElement('button');
+                        entryTitle.type = 'button';
+                        entryTitle.className = 'sidebar-entry-title';
+                        entryTitle.textContent = marker_title_text(marker, marker_type);
+                        entryTitle.addEventListener('click', function() {
+                            var t = this.getAttribute('data-type');
+                            var i = this.getAttribute('data-index');
+                            focus_marker(mymap, markers[t]["markers"][i]);
+                        });
+                        entryTitle.setAttribute('data-type', marker_type);
+                        entryTitle.setAttribute('data-index', marker_i);
+
+                        var actions = document.createElement('div');
+                        actions.className = 'sidebar-entry-actions';
+
+                        var entryToggle = document.createElement('button');
+                        entryToggle.type = 'button';
+                        entryToggle.className = 'sidebar-entry-toggle';
+                        entryToggle.setAttribute('aria-label', 'Toggle details');
+                        entryToggle.textContent = sidebarState.openEntries[entryId] ? '▾' : '▸';
+                        entryToggle.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            var t = this.getAttribute('data-type');
+                            var i = this.getAttribute('data-index');
+                            var id = t + ':' + i;
+                            sidebarState.openEntries[id] = !sidebarState.openEntries[id];
+                            update_toggle_all_button(markers);
+                build_sidebar(mymap, markers);
+                        });
+                        entryToggle.setAttribute('data-type', marker_type);
+                        entryToggle.setAttribute('data-index', marker_i);
+
+                        var locate = document.createElement('button');
+                        locate.type = 'button';
+                        locate.className = 'sidebar-action sidebar-action-icon';
+                        locate.setAttribute('aria-label', 'Show on map');
+                        locate.innerHTML = '&#x1F5FA;';
+                        locate.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            var t = this.getAttribute('data-type');
+                            var i = this.getAttribute('data-index');
+                            focus_marker(mymap, markers[t]["markers"][i]);
+                        });
+                        locate.setAttribute('data-type', marker_type);
+                        locate.setAttribute('data-index', marker_i);
+
+                        var completeWrap = document.createElement('label');
+                        completeWrap.className = 'sidebar-complete';
+
+                        var complete = document.createElement('input');
+                        complete.type = 'checkbox';
+                        complete.checked = !!marker.completed;
+                        complete.addEventListener('change', function() {
+                            var t = this.getAttribute('data-type');
+                            var i = this.getAttribute('data-index');
+                            set_marker_completed(mymap, markers, t, i, this.checked);
+                        });
+                        complete.setAttribute('data-type', marker_type);
+                        complete.setAttribute('data-index', marker_i);
+
+                        var completeLabel = document.createElement('span');
+                        completeLabel.textContent = 'Done';
+
+                        completeWrap.appendChild(complete);
+                        completeWrap.appendChild(completeLabel);
+
+                        actions.appendChild(entryToggle);
+                        actions.appendChild(locate);
+                        actions.appendChild(completeWrap);
+
+                        row.appendChild(entryTitle);
+                        row.appendChild(actions);
+
+                        var details = document.createElement('div');
+                        details.className = 'sidebar-entry-details';
+                        if (!sidebarState.openEntries[entryId]) {
+                            details.style.display = 'none';
+                        }
+
+                        var coords = document.createElement('div');
+                        coords.className = 'sidebar-entry-coords';
+                        coords.textContent = 'Location: [' + marker["coords"][0].toFixed(2) + ', ' + marker["coords"][1].toFixed(2) + ']';
+
+                        var desc = document.createElement('div');
+                        desc.className = 'sidebar-entry-desc';
+                        if (marker.description) {
+                            // Existing descriptions contain HTML links in a few places.
+                            desc.innerHTML = marker.description;
+                        } else {
+                            desc.textContent = '';
+                        }
+
+                        details.appendChild(coords);
+                        details.appendChild(desc);
+
+                        li.appendChild(row);
+                        li.appendChild(details);
+                        list.appendChild(li);
+                    }
+
+                    section.appendChild(list);
+                    sidebar.appendChild(section);
+                }
+            }
+
             function onload() {
                 var params = (new URL(document.location)).searchParams;
                 language = params.get('language');
                 if (!language) {
-                    language = 'nl';
+                    language = 'en';
                 }
                 debug = params.get('debug');
                 if (!debug) {
@@ -76,10 +432,12 @@
                         [-90, -180],
                     ],
                 }).setView([0, 0], 2);
+
                 L.tileLayer('tiles/' + tiles +'/{z}/{x}/{y}.png', {
                     maxNativeZoom: 4,
                     maxZoom: 10,
                 }).addTo(mymap);
+
                 update_label_visibility(mymap);
                 mymap.on('zoomend', function () {
                     update_label_visibility(mymap);
@@ -100,21 +458,83 @@
                             .openOn(mymap);
                     });
                 }
+
+                var hideCompleted = document.getElementById('hideCompleted');
+                if (hideCompleted) {
+                    hideCompleted.addEventListener('change', function() {
+                        // update_markers/build_sidebar will run after markers load.
+                        // This handler is useful after completion state changes.
+                    });
+                }
+
+                var sidebarToggle = document.getElementById('sidebarToggle');
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener('click', function() {
+                        var app = document.getElementById('app');
+                        if (L.DomUtil.hasClass(app, 'sidebar-open')) {
+                            L.DomUtil.removeClass(app, 'sidebar-open');
+                        } else {
+                            L.DomUtil.addClass(app, 'sidebar-open');
+                        }
+                        setTimeout(function() {
+                            mymap.invalidateSize();
+                        }, 220);
+                    });
+                }
+
                 fetch('markers.json').then(function(response) {
                     response.json().then(function(markers) {
                         initialize(mymap, markers);
+
+                        var search = document.getElementById('sidebarSearch');
+                        if (search) {
+                            search.addEventListener('input', function() {
+                                update_markers(mymap, markers);
+                                build_sidebar(mymap, markers);
+                                maybe_zoom_to_search_results(mymap, markers);
+                            });
+                        }
                     });
-                }); 
+                });
             }
+
+            function update_toggle_all_button(markers) {
+                var btn = document.getElementById('toggleAll');
+                if (!btn || !markers) return;
+
+                var anyVisible = false;
+                var allHidden = true;
+                for (var marker_type in markers) {
+                    if (markers[marker_type].visibility == 'visible') {
+                        anyVisible = true;
+                        allHidden = false;
+                    } else {
+                        // keep allHidden true
+                    }
+                }
+
+                if (!anyVisible || allHidden) {
+                    btn.textContent = 'Show all';
+                    btn.setAttribute('data-mode', 'show');
+                } else {
+                    btn.textContent = 'Hide all';
+                    btn.setAttribute('data-mode', 'hide');
+                }
+            }
+
             function initialize(mymap, markers) {
                 var completed = JSON.parse(localStorage.getItem("completed"));
                 if (!completed) completed = {};
+
                 for (marker_type in markers) {
                     var icon = L.icon({iconUrl: 'icons/'+marker_type+'.png', iconSize: [32, 32]});
-                    // marker_type defauls
+
+                    // marker_type defaults
                     markers[marker_type].visibility = "visible";
+
                     for (marker_i in markers[marker_type]["markers"]) {
                         var marker = markers[marker_type]["markers"][marker_i];
+
                         // marker defaults
                         marker._visibility = "visible";
                         if (!marker.tiles) {
@@ -127,218 +547,428 @@
                             marker.completed = completed[marker_type].indexOf(marker_i) != -1;
                         }
 
+                        marker._marker_type = marker_type;
+                        marker._marker_i = marker_i;
+
                         marker.marker = L.marker(marker["coords"], {icon: icon}).addTo(mymap);
 
                         var container = L.DomUtil.create('div');
                         var title = L.DomUtil.create('h1', '', container);
-                        var title_text;
-                        if (marker.title) {
-                            if (marker.title.constructor == Object) {
-                                if (language in marker.title) {
-                                    title_text = marker.title[language];
-                                    title.innerHTML = title_text;
-                                } else {
-                                    title_text = marker_type;
-                                    title.innerHTML = title_text;
-                                }
-                            } else {
-                                title_text = marker.title;
-                                title.innerHTML = title_text;
-                            }
-                        } else {
-                            title_text = marker_type;
-                            title.innerHTML = title_text;
-                            if (debug) {
-                                title.innerHTML += " " + markers[marker_type]["markers"][marker_i]["coords"];
-                            }
+                        var title_text = marker_title_text(marker, marker_type);
+
+                        title.innerHTML = title_text;
+                        if (!marker.title && debug) {
+                            title.innerHTML += " " + marker["coords"]; 
                         }
+
+                        marker._title_text = title_text;
+
                         marker.marker.bindTooltip(title_text, {
                             permanent: true,
                             direction: 'right',
                             className: 'marker-label',
                         });
+
                         L.DomUtil.create('br', '', container);
+
                         var description = L.DomUtil.create('div', '', container);
                         if (marker.description) description.innerHTML = marker.description;
+
                         L.DomUtil.create('br', '', container);
+
                         var complete = L.DomUtil.create('a', '', container);
                         complete.href = '#';
                         complete.innerHTML = 'complete';
                         complete.id = 'complete';
+
                         if (marker.completed) {
-                            L.DomUtil.addClass(container, "completed")
+                            L.DomUtil.addClass(container, "completed");
                         }
+
                         L.DomEvent.disableClickPropagation(complete);
                         L.DomEvent.on(complete, 'click', function() {
                             var popup = this.marker.getPopup();
                             var container = popup.getContent();
-                            var marker_i, marker_type, completed = {};
-                            this.completed = !L.DomUtil.hasClass(container, 'completed');
-                            if (this.completed) {
+
+                            var nextCompleted = !L.DomUtil.hasClass(container, 'completed');
+                            if (nextCompleted) {
                                 L.DomUtil.addClass(container, 'completed');
                             } else {
                                 L.DomUtil.removeClass(container, 'completed');
                             }
                             popup.update();
 
-
-                            // serialize completed
-                            for (marker_type in markers) {
-                                for (marker_i in markers[marker_type]["markers"]) {
-                                    if (markers[marker_type]["markers"][marker_i].completed) {
-                                        if (!completed[marker_type]) {
-                                            completed[marker_type] = [];
-                                        }
-                                        completed[marker_type].push(marker_i);
-                                    }
-                                }
-                            }
-                            localStorage.setItem("completed", JSON.stringify(completed));
-                            update_markers(mymap, markers);
+                            set_marker_completed(mymap, markers, this._marker_type, this._marker_i, nextCompleted);
                         }, marker);
+
                         marker.marker.bindPopup(container);
                     }
-                };
+                }
+
                 update_markers(mymap, markers);
-                var legend = L.control({position: 'bottomright'});
-                legend.onAdd = function (map) {
-                    var container = L.DomUtil.create('div', 'info legend');
 
-                    var toggle = L.DomUtil.create('a', '', container);
-                    toggle.href = "#";
-                    toggle.innerHTML = 'Legend';
+                var hideCompleted = document.getElementById('hideCompleted');
+                if (hideCompleted) {
+                    hideCompleted.addEventListener('change', function() {
+                        update_markers(mymap, markers);
+                        update_toggle_all_button(markers);
+                        build_sidebar(mymap, markers);
+                        maybe_zoom_to_search_results(mymap, markers);
+                    });
+                }
 
-                    var legenditems;
-                    L.DomEvent.disableClickPropagation(toggle);
-                    L.DomEvent.on(toggle, "click", L.DomEvent.stop);
-                    L.DomEvent.on(toggle, "click", function(ev) {
-                        if (legenditems.style.display === "none") {
-                          legenditems.style.display = "block";
-                        } else {
-                          legenditems.style.display = "none";
-                        }
-                    }, this);
+                var zoomToResults = document.getElementById('zoomToResults');
+                if (zoomToResults) {
+                    zoomToResults.addEventListener('change', function() {
+                        maybe_zoom_to_search_results(mymap, markers);
+                    });
+                }
 
-                    L.DomUtil.create('br', '', container);
-
-                    var showcompleted = L.DomUtil.create('a', '', container);
-                    showcompleted.href = '#';
-                    showcompleted.innerHTML = 'show completed';
-                    showcompleted.id = 'showcompleted';
-                    L.DomEvent.on(showcompleted, "click", L.DomEvent.stop);
-                    L.DomEvent.on(showcompleted, "click", function(ev) {
-                        if (L.DomUtil.hasClass(showcompleted, "selected")) {
-                            L.DomUtil.removeClass(showcompleted, "selected");
-                        } else {
-                            L.DomUtil.addClass(showcompleted, "selected");
+                var toggleAll = document.getElementById('toggleAll');
+                if (toggleAll) {
+                    toggleAll.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        var mode = toggleAll.getAttribute('data-mode');
+                        var marker_type;
+                        for (marker_type in markers) {
+                            markers[marker_type].visibility = (mode == 'show') ? 'visible' : 'hidden';
                         }
                         update_markers(mymap, markers);
+                        update_toggle_all_button(markers);
+                        build_sidebar(mymap, markers);
                     });
+                }
 
-                    L.DomUtil.create('br', '', container);
+                update_toggle_all_button(markers);
+                build_sidebar(mymap, markers);
 
-                    var lang, languages = ["nl", "en"];
-
-                    for (lang in languages) {
-                        lang = languages[lang];
-                        var langbutton = L.DomUtil.create('a', 'languages', container);
-                        langbutton.href = '?language=' + lang;
-                        langbutton.innerHTML = lang;
-                        if (lang == language) {
-                            L.DomUtil.addClass(langbutton, "selected");
-                        }
-                    }
-
-                    L.DomUtil.create('br', '', container);
-
-                    var selectall = L.DomUtil.create('a', 'selected', container);
-                    selectall.href = '#';
-                    selectall.innerHTML = 'all';
-                    selectall.id = 'selectall';
-
-                    L.DomUtil.create('br', '', container);
-
-                    legenditems = L.DomUtil.create('ul', 'cf', container);
-
-                    L.DomEvent.on(selectall, "click", L.DomEvent.stop);
-                    L.DomEvent.on(selectall, "click", function(ev) {
-                        L.DomUtil.addClass(L.DomUtil.get("selectall"), "selected");
-                        for (marker_type in markers) {
-                            L.DomUtil.removeClass(L.DomUtil.get(marker_type), "disabled");
-                            markers[marker_type].visibility = "visible";
-                            update_markers(mymap, markers);
-                        }
-                    }, this);
-
-                    legenditems.setAttribute("id", "legenditems");
-                    for (marker_type in markers) {
-                        var title;
-                        if (language in markers[marker_type]["title"]) {
-                            title = markers[marker_type]["title"][language];
-                        } else {
-                            title = marker_type;
-                        }
-                        li = L.DomUtil.create('li', '', legenditems);
-                        li.setAttribute("id", marker_type);
-                        li.innerHTML = L.Util.template(
-                            "<img src=\"icons/{marker_type}.png\">{title}", {
-                                "marker_type": marker_type,
-                                "title": title
-                            }
-                        );
-                        L.DomEvent.on(li, "click", L.DomEvent.stop);
-                        L.DomEvent.on(li, "click", function(ev) {
-                            var all_visible = true;
-                            L.DomUtil.removeClass(L.DomUtil.get("selectall"), "selected");
-                            for (marker_type in markers) {
-                                if (markers[marker_type].visibility != "visible") {
-                                    all_visible = false;
-                                    break;
-                                }
-                            }
-                            if (all_visible) {
-                                for (marker_type in markers) {
-                                    if (this.getAttribute("id") == marker_type) {
-                                        markers[marker_type].visibility = "visible";
-                                    } else {
-                                        markers[marker_type].visibility = "hidden";
-                                    }
-
-                                }
-                            } else {
-                                marker_type = markers[this.getAttribute("id")];
-                                if (marker_type.visibility == "visible") {
-                                    marker_type.visibility = "hidden";
-                                } else {
-                                    marker_type.visibility = "visible";
-                                }
-                            }
-                            for (marker_type in markers) {
-                                if (markers[marker_type].visibility == "visible") {
-                                    L.DomUtil.removeClass(L.DomUtil.get(marker_type), "disabled");
-                                } else {
-                                    L.DomUtil.addClass(L.DomUtil.get(marker_type), "disabled");
-                                }
-                            }
-                            update_markers(mymap, markers);
-                        });
-
-                    }
-                    return container;
-                };
-                legend.addTo(mymap);
             }
         </script>
         <style>
             .cf:before,
             .cf:after {
-                content: " "; /* 1 */
-                display: table; /* 2 */
+                content: " ";
+                display: table;
             }
             .cf:after {
-                    clear: both;
+                clear: both;
             }
-            #mapid { height: 100%; }
+
+            html, body {
+                height: 100%;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            #app {
+                height: 100%;
+                display: flex;
+                flex-direction: row;
+            }
+
+            #mapid {
+                flex: 1;
+                height: 100%;
+                min-width: 0;
+            }
+
+            .sidebar {
+                width: 360px;
+                max-width: 90vw;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.94);
+                border-right: 1px solid rgba(0,0,0,0.12);
+                box-shadow: 0 0 18px rgba(0,0,0,0.12);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .sidebar-site-title {
+                padding: 12px 12px 10px 12px;
+                font: 800 18px/22px Arial, Helvetica, sans-serif;
+                letter-spacing: 0.4px;
+                color: #111;
+                background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,245,245,0.92));
+                border-bottom: 1px solid rgba(0,0,0,0.10);
+            }
+
+            .sidebar-header {
+                padding: 10px 12px;
+                border-bottom: 1px solid rgba(0,0,0,0.10);
+                background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,250,0.90));
+            }
+
+            .sidebar-header h2 {
+                margin: 0;
+                font: 600 14px/18px Arial, Helvetica, sans-serif;
+                letter-spacing: 0.2px;
+            }
+
+            .sidebar-filters {
+                margin-top: 8px;
+                font: 13px/16px Arial, Helvetica, sans-serif;
+                color: #222;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .sidebar-search {
+                flex: 1 1 140px;
+                min-width: 120px;
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.95);
+                border-radius: 9px;
+                padding: 6px 10px;
+                font: 12px/14px Arial, Helvetica, sans-serif;
+            }
+
+            .sidebar-search:focus {
+                outline: none;
+                border-color: rgba(0,0,0,0.28);
+                box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+            }
+
+            .sidebar-filters label {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                user-select: none;
+            }
+
+            .sidebar-top-action {
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.95);
+                border-radius: 9px;
+                padding: 6px 10px;
+                cursor: pointer;
+                font: 12px/14px Arial, Helvetica, sans-serif;
+                white-space: nowrap;
+            }
+
+            .sidebar-top-action:hover {
+                background: rgba(255,255,255,1);
+            }
+
+            #sidebarContent {
+                padding: 10px 12px;
+                overflow: auto;
+                flex: 1;
+            }
+
+            .sidebar-category {
+                border: 1px solid rgba(0,0,0,0.10);
+                border-radius: 8px;
+                margin-bottom: 10px;
+                background: rgba(255,255,255,0.85);
+            }
+
+            .sidebar-category.is-hidden {
+                opacity: 0.65;
+            }
+
+            .sidebar-category-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 10px;
+                border-bottom: 1px solid rgba(0,0,0,0.08);
+            }
+
+            .sidebar-category-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 0;
+            }
+
+            .sidebar-expand {
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.9);
+                cursor: pointer;
+                font: 700 14px/20px Arial, Helvetica, sans-serif;
+            }
+
+            .sidebar-visibility {
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.9);
+                padding: 0;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font: 14px/1 Arial, Helvetica, sans-serif;
+            }
+
+            .sidebar-visibility:hover {
+                background: rgba(255,255,255,1);
+            }
+
+            .sidebar-category-title {
+                font: 700 15px/18px Arial, Helvetica, sans-serif;
+                color: #111;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .sidebar-category-counts {
+                font: 12px/16px Arial, Helvetica, sans-serif;
+                color: #555;
+                white-space: nowrap;
+            }
+
+            .sidebar-category-progress {
+                height: 4px;
+                margin: 0 10px 8px 10px;
+                background: rgba(0,0,0,0.08);
+                border-radius: 999px;
+                overflow: hidden;
+            }
+
+            .sidebar-category-progress-fill {
+                height: 100%;
+                width: 0;
+                background: linear-gradient(90deg, rgba(42, 122, 59, 0.9), rgba(42, 122, 59, 0.65));
+                border-radius: 999px;
+            }
+
+            .sidebar-entry-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .sidebar-entry {
+                border-top: 1px solid rgba(0,0,0,0.07);
+            }
+
+            .sidebar-entry-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 10px 10px;
+            }
+
+            .sidebar-entry-title {
+                flex: 1;
+                text-align: left;
+                border: none;
+                background: transparent;
+                padding: 0;
+                cursor: pointer;
+                font: 600 14px/18px Arial, Helvetica, sans-serif;
+                color: #1c2a33;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .sidebar-entry.completed .sidebar-entry-title {
+                text-decoration: line-through;
+                color: #6a6a6a;
+            }
+
+            .sidebar-entry-coords {
+                color: #666;
+                font-family: monospace;
+                font-size: 11px;
+                line-height: 14px;
+                white-space: nowrap;
+                margin-top: 8px;
+            }
+
+            .sidebar-entry-desc {
+                font: 12px/16px Arial, Helvetica, sans-serif;
+                color: #333;
+                margin-top: 8px;
+            }
+
+            .sidebar-entry-actions {
+                display: inline-flex;
+                gap: 10px;
+                align-items: center;
+                flex-wrap: nowrap;
+                flex-shrink: 0;
+            }
+
+            .sidebar-entry-toggle {
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.9);
+                padding: 0;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font: 700 14px/1 Arial, Helvetica, sans-serif;
+                color: #1c2a33;
+            }
+
+            .sidebar-entry-toggle:hover {
+                background: rgba(255,255,255,1);
+                color: #000;
+            }
+
+            .sidebar-entry-details {
+                padding: 0 10px 12px 10px;
+            }
+
+            .sidebar-action {
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.9);
+                border-radius: 7px;
+                padding: 6px 8px;
+                cursor: pointer;
+                font: 12px/14px Arial, Helvetica, sans-serif;
+            }
+
+            .sidebar-action-icon {
+                width: 30px;
+                height: 30px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                line-height: 1;
+            }
+
+            .sidebar-complete {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                user-select: none;
+                font: 12px/16px Arial, Helvetica, sans-serif;
+                color: #1c2a33;
+            }
+
+            .sidebar-complete input {
+                width: 16px;
+                height: 16px;
+                accent-color: #2a7a3b;
+            }
+
+            .sidebar-entry.completed .sidebar-complete {
+                color: #2a7a3b;
+                font-weight: 600;
+            }
+
             .info {
                 padding: 6px 8px;
                 font: 14px/16px Arial, Helvetica, sans-serif;
@@ -347,56 +977,26 @@
                 box-shadow: 0 0 15px rgba(0,0,0,0.2);
                 border-radius: 5px;
             }
-            .legend {
-                line-height: 18px;
-                color: #555;
-                max-height: calc(100vh - 140px);
-            }
-            .legend ul {
-                padding: 0;
-                width: 355px;
-                list-style-type: none;
-                overflow: auto;
-                max-height: calc(100vh - 226px);
-            }
-            .legend li {
-                width: 170px;
-                float: left;
-            }
+
             li.disabled {
                 filter: grayscale(100%);
                 text-decoration: line-through;
             }
-            .legend img {
-                width: 32px;
-                height: 32px;
-            }
+
             #forkme {
                 z-index: 1000;
                 right: 0;
                 position: absolute;
+            }
 
-            }
-            body {
-                margin:0;
-                padding:0
-            }
             .selected {
                 text-decoration: none !important;
             }
-            #selectall {
-                text-decoration: line-through;
-            }
-            #showcompleted {
-                text-decoration: line-through;
-            }
+
             .completed #complete {
                 text-decoration: line-through;
             }
-            .languages {
-                padding: 0px 10px 0px 0px;
-                text-decoration: line-through;
-            }
+
             .leaflet-tooltip.marker-label {
                 display: none;
                 pointer-events: none;
@@ -405,22 +1005,72 @@
                 color: #222;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.25);
             }
+
             #mapid.show-labels .leaflet-tooltip.marker-label {
                 display: block;
             }
-            @media screen and (max-width: 375px) {
-                .legend li {
-                    width: 170px;
-                    float: none;
+
+            #sidebarToggle {
+                display: none;
+                position: absolute;
+                z-index: 1100;
+                left: 10px;
+                top: 10px;
+                border: 1px solid rgba(0,0,0,0.18);
+                background: rgba(255,255,255,0.92);
+                border-radius: 9px;
+                padding: 8px 10px;
+                font: 12px/14px Arial, Helvetica, sans-serif;
+                cursor: pointer;
+                box-shadow: 0 3px 10px rgba(0,0,0,0.20);
+            }
+
+            @media screen and (max-width: 900px) {
+                #sidebarToggle {
+                    display: block;
                 }
-                .legend ul {
-                    width: 170px;
+
+                .sidebar {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    z-index: 1050;
+                    transform: translateX(-102%);
+                    transition: transform 200ms ease;
+                }
+
+                #app.sidebar-open .sidebar {
+                    transform: translateX(0);
                 }
             }
+
         </style>
     </head>
     <body onload="onload()">
         <a class="github-fork-ribbon" href="https://github.com/meeuw/legocityundercovermap" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a>
-        <div id="mapid"></div>
+        <button id="sidebarToggle" type="button">List</button>
+        <div id="app">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-site-title">Lego City Compuper</div>
+                <div class="sidebar-header">
+                    <h2>Items</h2>
+                    <div class="sidebar-filters">
+                        <input id="sidebarSearch" class="sidebar-search" type="search" placeholder="Search..." autocomplete="off" spellcheck="false">
+                        <button id="toggleAll" type="button" class="sidebar-top-action">Hide all</button>
+                        <label>
+                            <input id="hideCompleted" type="checkbox" checked>
+                            <span>Hide completed</span>
+                        </label>
+                        <label>
+                            <input id="zoomToResults" type="checkbox">
+                            <span>Zoom to results</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="sidebarContent"></div>
+            </aside>
+            <div id="mapid"></div>
+        </div>
     </body>
 </html>
