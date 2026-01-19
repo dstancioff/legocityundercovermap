@@ -48,6 +48,13 @@
                     }
                 }
             }
+            function update_label_visibility(mymap) {
+                if (mymap.getZoom() >= 5) {
+                    L.DomUtil.addClass(mymap.getContainer(), 'show-labels');
+                } else {
+                    L.DomUtil.removeClass(mymap.getContainer(), 'show-labels');
+                }
+            }
             function onload() {
                 var params = (new URL(document.location)).searchParams;
                 language = params.get('language');
@@ -70,8 +77,13 @@
                     ],
                 }).setView([0, 0], 2);
                 L.tileLayer('tiles/' + tiles +'/{z}/{x}/{y}.png', {
-                    maxZoom: 4,
+                    maxNativeZoom: 4,
+                    maxZoom: 10,
                 }).addTo(mymap);
+                update_label_visibility(mymap);
+                mymap.on('zoomend', function () {
+                    update_label_visibility(mymap);
+                });
 
                 var popup = L.popup();
                 if (debug) {
@@ -119,22 +131,32 @@
 
                         var container = L.DomUtil.create('div');
                         var title = L.DomUtil.create('h1', '', container);
+                        var title_text;
                         if (marker.title) {
                             if (marker.title.constructor == Object) {
                                 if (language in marker.title) {
-                                    title.innerHTML = marker.title[language];
+                                    title_text = marker.title[language];
+                                    title.innerHTML = title_text;
                                 } else {
-                                    title.innerHTML = marker_type;
+                                    title_text = marker_type;
+                                    title.innerHTML = title_text;
                                 }
                             } else {
-                                title.innerHTML = marker.title;
+                                title_text = marker.title;
+                                title.innerHTML = title_text;
                             }
                         } else {
-                            title.innerHTML = marker_type;
+                            title_text = marker_type;
+                            title.innerHTML = title_text;
                             if (debug) {
                                 title.innerHTML += " " + markers[marker_type]["markers"][marker_i]["coords"];
                             }
                         }
+                        marker.marker.bindTooltip(title_text, {
+                            permanent: true,
+                            direction: 'right',
+                            className: 'marker-label',
+                        });
                         L.DomUtil.create('br', '', container);
                         var description = L.DomUtil.create('div', '', container);
                         if (marker.description) description.innerHTML = marker.description;
@@ -374,6 +396,17 @@
             .languages {
                 padding: 0px 10px 0px 0px;
                 text-decoration: line-through;
+            }
+            .leaflet-tooltip.marker-label {
+                display: none;
+                pointer-events: none;
+                background: rgba(255, 255, 255, 0.9);
+                border: 1px solid #aaa;
+                color: #222;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+            }
+            #mapid.show-labels .leaflet-tooltip.marker-label {
+                display: block;
             }
             @media screen and (max-width: 375px) {
                 .legend li {
