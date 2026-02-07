@@ -78,6 +78,51 @@
                 return marker_type;
             }
 
+            function normalize_text_case_insensitive(text) {
+                return (text || '').toString().trim().toLowerCase();
+            }
+
+            function summarize_category_label(label, maxLen) {
+                var text = (label || '').toString().trim();
+                if (!text) return '';
+                if (text.length <= maxLen) return text;
+
+                var words = text.split(/[^A-Za-z0-9]+/).filter(function(w) { return !!w; });
+                if (words.length > 1) {
+                    var initials = '';
+                    for (var i = 0; i < words.length; i++) {
+                        initials += words[i].charAt(0).toUpperCase();
+                    }
+                    if (initials.length >= 2) {
+                        return initials.slice(0, maxLen);
+                    }
+                }
+
+                var compact = text.replace(/[^A-Za-z0-9]/g, '');
+                if (!compact) compact = text;
+                if (compact.length > maxLen) {
+                    compact = compact.charAt(0) + compact.slice(1).replace(/[aeiouAEIOU]/g, '');
+                }
+                if (compact.length > maxLen) {
+                    compact = compact.slice(0, maxLen);
+                }
+                return compact;
+            }
+
+            function sidebar_entry_title_text(markers, marker, marker_type, includeCategoryLabel) {
+                var markerTitle = marker_title_text(marker, marker_type);
+                if (!includeCategoryLabel) return markerTitle;
+
+                var categoryTitle = category_title_text(markers, marker_type);
+                if (normalize_text_case_insensitive(categoryTitle) == normalize_text_case_insensitive(markerTitle)) {
+                    return markerTitle;
+                }
+
+                var shortCategory = summarize_category_label(categoryTitle, 8);
+                if (!shortCategory) return markerTitle;
+                return shortCategory + ': ' + markerTitle;
+            }
+
             function get_district_by_id(districtId) {
                 for (var i = 0; i < activeDistricts.length; i++) {
                     if (activeDistricts[i].id == districtId) return activeDistricts[i];
@@ -410,11 +455,7 @@
                 var entryTitle = document.createElement('button');
                 entryTitle.type = 'button';
                 entryTitle.className = 'sidebar-entry-title';
-                if (includeCategoryLabel) {
-                    entryTitle.textContent = category_title_text(markers, marker_type) + ' - ' + marker_title_text(marker, marker_type);
-                } else {
-                    entryTitle.textContent = marker_title_text(marker, marker_type);
-                }
+                entryTitle.textContent = sidebar_entry_title_text(markers, marker, marker_type, includeCategoryLabel);
                 entryTitle.addEventListener('click', function() {
                     var t = this.getAttribute('data-type');
                     var i = this.getAttribute('data-index');
