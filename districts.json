@@ -1,0 +1,136 @@
+{
+    "districts": [
+        {
+            "id": "cherry-tree-hills",
+            "title": {"en": "Cherry Tree Hills"},
+            "tiles": "main",
+            "path": [[-22, -104], [-22, -58], [-60, -58], [-60, -104]]
+        },
+        {
+            "id": "auburn",
+            "title": {"en": "Auburn"},
+            "tiles": "main",
+            "path": [[20, -132], [20, -82], [-22, -82], [-22, -132]]
+        },
+        {
+            "id": "auburn-bay-bridge",
+            "title": {"en": "Auburn Bay Bridge"},
+            "tiles": "main",
+            "path": [[52, -114], [52, -92], [20, -92], [20, -114]]
+        },
+        {
+            "id": "fort-meadows",
+            "title": {"en": "Fort Meadows"},
+            "tiles": "main",
+            "path": [[72, -130], [72, -96], [52, -96], [52, -130]]
+        },
+        {
+            "id": "bluebell-national-park",
+            "title": {"en": "Bluebell National Park"},
+            "tiles": "main",
+            "path": [[82, -132], [82, -70], [72, -70], [72, -132]]
+        },
+        {
+            "id": "blackwell-bridge",
+            "title": {"en": "Blackwell Bridge"},
+            "tiles": "main",
+            "path": [[82, -70], [82, -30], [72, -30], [72, -70]]
+        },
+        {
+            "id": "uptown",
+            "title": {"en": "Uptown"},
+            "tiles": "main",
+            "path": [[82, -30], [82, -6], [66, -6], [66, -30]]
+        },
+        {
+            "id": "crescent-park",
+            "title": {"en": "Crescent Park"},
+            "tiles": "main",
+            "path": [[66, -18], [66, -6], [50, -6], [50, -18]]
+        },
+        {
+            "id": "lego-city-airport",
+            "title": {"en": "LEGO City Airport"},
+            "tiles": "main",
+            "path": [[82, -6], [82, 30], [62, 30], [62, -6]]
+        },
+        {
+            "id": "bright-lights-plaza",
+            "title": {"en": "Bright Lights Plaza"},
+            "tiles": "main",
+            "path": [[50, -28], [50, 10], [24, 10], [24, -28]]
+        },
+        {
+            "id": "paradise-sands",
+            "title": {"en": "Paradise Sands"},
+            "tiles": "main",
+            "path": [[72, 64], [72, 30], [24, 30], [24, 64]]
+        },
+        {
+            "id": "crosstown-tunnel",
+            "title": {"en": "Crosstown Tunnel"},
+            "tiles": "main",
+            "path": [[62, 30], [62, 10], [24, 10], [24, 30]]
+        },
+        {
+            "id": "fresco",
+            "title": {"en": "Fresco"},
+            "tiles": "main",
+            "path": [[24, 58], [24, 18], [-12, 18], [-12, 58]]
+        },
+        {
+            "id": "grand-canal",
+            "title": {"en": "Grand Canal"},
+            "tiles": "main",
+            "path": [[24, 18], [24, 8], [0, 8], [0, 18]]
+        },
+        {
+            "id": "pagoda",
+            "title": {"en": "Pagoda"},
+            "tiles": "main",
+            "path": [[20, 8], [20, -16], [-12, -16], [-12, 8]]
+        },
+        {
+            "id": "festival-square",
+            "title": {"en": "Festival Square"},
+            "tiles": "main",
+            "path": [[-26, 20], [-26, -12], [-50, -12], [-50, 20]]
+        },
+        {
+            "id": "kings-court",
+            "title": {"en": "King's Court"},
+            "tiles": "main",
+            "path": [[-20, 56], [-20, 20], [-50, 20], [-50, 56]]
+        },
+        {
+            "id": "downtown",
+            "title": {"en": "Downtown"},
+            "tiles": "main",
+            "path": [[-52, 32], [-52, 0], [-72, 0], [-72, 32]]
+        },
+        {
+            "id": "heritage-bridge",
+            "title": {"en": "Heritage Bridge"},
+            "tiles": "main",
+            "path": [[-22, -58], [-22, -12], [-50, -12], [-50, -58]]
+        },
+        {
+            "id": "lady-liberty-island",
+            "title": {"en": "Lady Liberty Island"},
+            "tiles": "main",
+            "path": [[34, -78], [34, -56], [18, -56], [18, -78]]
+        },
+        {
+            "id": "albatross-island",
+            "title": {"en": "Albatross Island"},
+            "tiles": "main",
+            "path": [[-62, -27], [-62, -41], [-70, -41], [-70, -27]]
+        },
+        {
+            "id": "apollo-island",
+            "title": {"en": "Apollo Island"},
+            "tiles": "main",
+            "path": [[-35, 101], [-35, 167], [-62, 167], [-62, 101]]
+        }
+    ]
+}

@@ -13,6 +13,7 @@
            crossorigin=""></script>
         <script>
             var language, debug, tiles;
+            var districtLayers = [];
             var sidebarState = {
                 openCategories: {},
                 openEntries: {},
@@ -29,6 +30,12 @@
                 var el = document.getElementById('sidebarSearch');
                 if (!el) return '';
                 return (el.value || '').trim().toLowerCase();
+            }
+
+            function get_show_districts() {
+                var showDistricts = document.getElementById('showDistricts');
+                if (!showDistricts) return false;
+                return !!showDistricts.checked;
             }
 
             function marker_matches_query(markers, marker_type, marker_i) {
@@ -110,6 +117,33 @@
                 return marker_type;
             }
 
+            function get_show_cursor_coords() {
+                var showCursorCoords = document.getElementById('showCursorCoords');
+                if (!showCursorCoords) return false;
+                return !!showCursorCoords.checked;
+            }
+
+            function format_coords(latlng) {
+                return '[' + latlng.lat.toFixed(2) + ', ' + latlng.lng.toFixed(2) + ']';
+            }
+
+            function update_cursor_coords(latlng) {
+                var el = document.getElementById('cursorCoords');
+                if (!el) return;
+
+                if (!get_show_cursor_coords()) {
+                    el.style.display = 'none';
+                    return;
+                }
+
+                el.style.display = 'block';
+                if (latlng) {
+                    el.textContent = 'Cursor: ' + format_coords(latlng);
+                } else {
+                    el.textContent = 'Cursor: --';
+                }
+            }
+
             function serialize_completed(markers) {
                 var marker_type, marker_i;
                 var completed = {};
@@ -173,6 +207,77 @@
                     padding: [24, 24],
                     maxZoom: 6,
                 });
+            }
+
+            function district_title_text(district) {
+                if (!district) return '';
+                if (!district.title) return district.id || 'District';
+                if (district.title.constructor == Object) {
+                    if (language in district.title) {
+                        return district.title[language];
+                    }
+                    if ('en' in district.title) {
+                        return district.title.en;
+                    }
+                    return district.id || 'District';
+                }
+                return district.title;
+            }
+
+            function update_district_visibility() {
+                var visible = get_show_districts();
+                for (var i = 0; i < districtLayers.length; i++) {
+                    var layer = districtLayers[i];
+                    if (visible) {
+                        layer.setStyle({opacity: 0.95, fillOpacity: 0.12});
+                    } else {
+                        layer.setStyle({opacity: 0, fillOpacity: 0});
+                    }
+                }
+            }
+
+            function initialize_districts(mymap, districtsData) {
+                districtLayers = [];
+
+                var districts = [];
+                if (districtsData) {
+                    if (districtsData.constructor == Array) {
+                        districts = districtsData;
+                    } else if (districtsData.districts && districtsData.districts.constructor == Array) {
+                        districts = districtsData.districts;
+                    }
+                }
+
+                for (var i = 0; i < districts.length; i++) {
+                    var district = districts[i];
+                    if (!district || !district.path || district.path.length < 3) continue;
+
+                    var districtTiles = district.tiles || 'main';
+                    if (districtTiles != tiles) continue;
+
+                    var style = district.style || {};
+                    var layer = L.polygon(district.path, {
+                        pane: 'districtPane',
+                        color: style.color || '#1f5fbf',
+                        weight: style.weight || 2,
+                        opacity: 0.95,
+                        fillColor: style.fillColor || style.color || '#1f5fbf',
+                        fillOpacity: 0.12,
+                    }).addTo(mymap);
+
+                    var title = district_title_text(district);
+                    if (title) {
+                        layer.bindTooltip(title, {
+                            sticky: true,
+                            direction: 'center',
+                            className: 'district-label',
+                        });
+                    }
+
+                    districtLayers.push(layer);
+                }
+
+                update_district_visibility();
             }
 
             function build_sidebar(mymap, markers) {
@@ -437,10 +542,18 @@
                     maxNativeZoom: 4,
                     maxZoom: 10,
                 }).addTo(mymap);
+                mymap.createPane('districtPane');
+                mymap.getPane('districtPane').style.zIndex = 350;
 
                 update_label_visibility(mymap);
                 mymap.on('zoomend', function () {
                     update_label_visibility(mymap);
+                });
+                mymap.on('mousemove', function(e) {
+                    update_cursor_coords(e.latlng);
+                });
+                mymap.on('mouseout', function() {
+                    update_cursor_coords(null);
                 });
 
                 var popup = L.popup();
@@ -482,19 +595,29 @@
                     });
                 }
 
-                fetch('markers.json').then(function(response) {
-                    response.json().then(function(markers) {
-                        initialize(mymap, markers);
+                Promise.all([
+                    fetch('markers.json').then(function(response) { return response.json(); }),
+                    fetch('districts.json')
+                        .then(function(response) {
+                            if (!response.ok) return {districts: []};
+                            return response.json();
+                        })
+                        .catch(function() { return {districts: []}; }),
+                ]).then(function(result) {
+                    var markers = result[0];
+                    var districtsData = result[1];
 
-                        var search = document.getElementById('sidebarSearch');
-                        if (search) {
-                            search.addEventListener('input', function() {
-                                update_markers(mymap, markers);
-                                build_sidebar(mymap, markers);
-                                maybe_zoom_to_search_results(mymap, markers);
-                            });
-                        }
-                    });
+                    initialize_districts(mymap, districtsData);
+                    initialize(mymap, markers);
+
+                    var search = document.getElementById('sidebarSearch');
+                    if (search) {
+                        search.addEventListener('input', function() {
+                            update_markers(mymap, markers);
+                            build_sidebar(mymap, markers);
+                            maybe_zoom_to_search_results(mymap, markers);
+                        });
+                    }
                 });
             }
 
@@ -624,6 +747,21 @@
                     });
                 }
 
+                var showCursorCoords = document.getElementById('showCursorCoords');
+                if (showCursorCoords) {
+                    showCursorCoords.addEventListener('change', function() {
+                        update_cursor_coords(null);
+                    });
+                    update_cursor_coords(null);
+                }
+
+                var showDistricts = document.getElementById('showDistricts');
+                if (showDistricts) {
+                    showDistricts.addEventListener('change', function() {
+                        update_district_visibility();
+                    });
+                }
+
                 var toggleAll = document.getElementById('toggleAll');
                 if (toggleAll) {
                     toggleAll.addEventListener('click', function(ev) {
@@ -673,6 +811,7 @@
                 flex: 1;
                 height: 100%;
                 min-width: 0;
+                position: relative;
             }
 
             .sidebar {
@@ -1010,6 +1149,14 @@
                 display: block;
             }
 
+            .leaflet-tooltip.district-label {
+                background: rgba(255, 255, 255, 0.9);
+                border: 1px solid rgba(0,0,0,0.25);
+                color: #1f2b44;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                font: 600 12px/14px Arial, Helvetica, sans-serif;
+            }
+
             #sidebarToggle {
                 display: none;
                 position: absolute;
@@ -1023,6 +1170,22 @@
                 font: 12px/14px Arial, Helvetica, sans-serif;
                 cursor: pointer;
                 box-shadow: 0 3px 10px rgba(0,0,0,0.20);
+            }
+
+            .cursor-coords {
+                display: none;
+                position: absolute;
+                right: 10px;
+                bottom: 10px;
+                z-index: 1000;
+                border: 1px solid rgba(0,0,0,0.18);
+                background: rgba(255,255,255,0.92);
+                border-radius: 8px;
+                padding: 6px 10px;
+                font: 12px/14px monospace;
+                color: #111;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+                pointer-events: none;
             }
 
             @media screen and (max-width: 900px) {
@@ -1066,11 +1229,21 @@
                             <input id="zoomToResults" type="checkbox">
                             <span>Zoom to results</span>
                         </label>
+                        <label>
+                            <input id="showDistricts" type="checkbox" checked>
+                            <span>Show districts</span>
+                        </label>
+                        <label>
+                            <input id="showCursorCoords" type="checkbox" checked>
+                            <span>Show cursor coords</span>
+                        </label>
                     </div>
                 </div>
                 <div id="sidebarContent"></div>
             </aside>
-            <div id="mapid"></div>
+            <div id="mapid">
+                <div id="cursorCoords" class="cursor-coords">Cursor: --</div>
+            </div>
         </div>
     </body>
 </html>
