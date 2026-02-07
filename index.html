@@ -15,11 +15,13 @@
             var language, debug, tiles;
             var districtLayers = [];
             var activeDistricts = [];
+            var districtPointIndex = null;
             var sidebarState = {
                 openCategories: {},
                 openDistricts: {},
-                openDistrictCategories: {},
                 openEntries: {},
+                focusDistrictId: null,
+                preFocusView: null,
             };
 
             function get_show_completed() {
@@ -42,9 +44,31 @@
             }
 
             function get_sidebar_grouping() {
-                var grouping = document.getElementById('sidebarGrouping');
-                if (!grouping) return 'category';
-                return grouping.value || 'category';
+                var active = document.querySelector('.sidebar-tab.is-active');
+                if (!active) return 'category';
+                return active.getAttribute('data-grouping') || 'category';
+            }
+
+            function get_focused_district_id() {
+                return sidebarState.focusDistrictId;
+            }
+
+            function show_district_validation_badge() {
+                var badge = document.getElementById('districtValidationBadge');
+                if (!badge) return;
+                if (!districtPointIndex || !districtPointIndex.meta || !districtPointIndex.validation) {
+                    badge.style.display = 'none';
+                    return;
+                }
+
+                var unassigned = districtPointIndex.meta.unassigned_point_count || 0;
+                var ambiguous = districtPointIndex.meta.ambiguous_point_count || 0;
+                if (unassigned == 0 && ambiguous == 0) {
+                    badge.style.display = 'none';
+                    return;
+                }
+                badge.style.display = 'inline-flex';
+                badge.textContent = 'District data: ' + unassigned + ' unassigned, ' + ambiguous + ' ambiguous';
             }
 
             function category_title_text(markers, marker_type) {
@@ -52,6 +76,102 @@
                     return markers[marker_type]["title"][language];
                 }
                 return marker_type;
+            }
+
+            function get_district_by_id(districtId) {
+                for (var i = 0; i < activeDistricts.length; i++) {
+                    if (activeDistricts[i].id == districtId) return activeDistricts[i];
+                }
+                return null;
+            }
+
+            function marker_matches_focus(marker) {
+                var focusedDistrict = get_focused_district_id();
+                if (!focusedDistrict) return true;
+                var markerDistrict = marker._district_id ? marker._district_id : '__unassigned';
+                return markerDistrict == focusedDistrict;
+            }
+
+            function update_district_focus_ui() {
+                var clearFocus = document.getElementById('clearDistrictFocus');
+                if (!clearFocus) return;
+
+                var focusedDistrict = get_focused_district_id();
+                if (!focusedDistrict) {
+                    clearFocus.style.display = 'none';
+                    return;
+                }
+
+                if (focusedDistrict == '__unassigned') {
+                    clearFocus.textContent = 'Clear focus: Unassigned';
+                } else {
+                    var district = get_district_by_id(focusedDistrict);
+                    clearFocus.textContent = district ? ('Clear focus: ' + district_title_text(district)) : 'Clear district focus';
+                }
+                clearFocus.style.display = 'inline-block';
+            }
+
+            function focus_district(mymap, markers, districtId) {
+                if (sidebarState.focusDistrictId == districtId) {
+                    clear_district_focus(mymap, markers, true);
+                    return;
+                }
+
+                if (sidebarState.focusDistrictId) {
+                    sidebarState.openDistricts[sidebarState.focusDistrictId] = false;
+                }
+                if (!sidebarState.focusDistrictId) {
+                    sidebarState.preFocusView = {
+                        center: mymap.getCenter(),
+                        zoom: mymap.getZoom(),
+                    };
+                }
+                sidebarState.focusDistrictId = districtId;
+                sidebarState.openDistricts[districtId] = true;
+
+                update_markers(mymap, markers);
+                build_sidebar(mymap, markers);
+                update_district_focus_ui();
+
+                if (!sidebarState.focusDistrictId) return;
+
+                if (districtId == '__unassigned') {
+                    var points = [];
+                    for (var marker_type in markers) {
+                        for (var marker_i in markers[marker_type]["markers"]) {
+                            var marker = markers[marker_type]["markers"][marker_i];
+                            if (marker.tiles != tiles) continue;
+                            if (marker._district_id) continue;
+                            points.push(marker["coords"]);
+                        }
+                    }
+                    if (points.length > 0) {
+                        mymap.fitBounds(L.latLngBounds(points), {padding: [24, 24], maxZoom: 6});
+                    }
+                    return;
+                }
+
+                var district = get_district_by_id(districtId);
+                if (district && district.path && district.path.length > 2) {
+                    mymap.fitBounds(L.latLngBounds(district.path), {
+                        padding: [24, 24],
+                        maxZoom: 6,
+                    });
+                }
+            }
+
+            function clear_district_focus(mymap, markers, restoreView) {
+                if (!sidebarState.focusDistrictId) return;
+                var previousDistrictId = sidebarState.focusDistrictId;
+                sidebarState.focusDistrictId = null;
+                sidebarState.openDistricts[previousDistrictId] = false;
+                update_markers(mymap, markers);
+                build_sidebar(mymap, markers);
+                update_district_focus_ui();
+                if (restoreView && sidebarState.preFocusView) {
+                    mymap.setView(sidebarState.preFocusView.center, sidebarState.preFocusView.zoom);
+                }
+                sidebarState.preFocusView = null;
             }
 
             function marker_matches_query(markers, marker_type, marker_i) {
@@ -92,6 +212,11 @@
 
                         // Hide completed if requested.
                         if (visibility !== 'hidden' && marker.completed && !showCompleted) {
+                            visibility = 'hidden';
+                        }
+
+                        // Focus on a single district.
+                        if (visibility !== 'hidden' && !marker_matches_focus(marker)) {
                             visibility = 'hidden';
                         }
 
@@ -211,6 +336,7 @@
                     for (var marker_i in markers[marker_type]["markers"]) {
                         var marker = markers[marker_type]["markers"][marker_i];
                         if (marker.tiles != tiles) continue;
+                        if (!marker_matches_focus(marker)) continue;
                         if (!marker_matches_query(markers, marker_type, marker_i)) continue;
                         points.push(marker["coords"]);
                     }
@@ -240,27 +366,11 @@
                 return district.title;
             }
 
-            function marker_in_district(marker, district) {
-                if (!marker || !district || !district._bbox) return false;
-                var districtTiles = district.tiles || 'main';
-                if ((marker.tiles || 'main') != districtTiles) return false;
-
-                var lat = marker.coords[0];
-                var lng = marker.coords[1];
-                var b = district._bbox;
-                return (
-                    lat >= b.lat_min &&
-                    lat <= b.lat_max &&
-                    lng >= b.lng_min &&
-                    lng <= b.lng_max
-                );
-            }
-
-            function marker_district_id(marker) {
-                for (var i = 0; i < activeDistricts.length; i++) {
-                    if (marker_in_district(marker, activeDistricts[i])) {
-                        return activeDistricts[i].id;
-                    }
+            function marker_district_id(marker_type, marker_i) {
+                if (!districtPointIndex || !districtPointIndex.pointDistrictById) return null;
+                var lookupId = marker_type + ':' + marker_i;
+                if (lookupId in districtPointIndex.pointDistrictById) {
+                    return districtPointIndex.pointDistrictById[lookupId];
                 }
                 return null;
             }
@@ -270,6 +380,7 @@
                 for (var marker_i in markers[marker_type]["markers"]) {
                     var marker = markers[marker_type]["markers"][marker_i];
                     if (marker.tiles != tiles) continue;
+                    if (!marker_matches_focus(marker)) continue;
                     if (!marker_matches_query(markers, marker_type, marker_i)) continue;
 
                     if (districtId !== undefined && districtId !== null) {
@@ -283,7 +394,7 @@
                 return out;
             }
 
-            function create_sidebar_entry(mymap, markers, marker_type, marker_i) {
+            function create_sidebar_entry(mymap, markers, marker_type, marker_i, includeCategoryLabel) {
                 var marker = markers[marker_type]["markers"][marker_i];
                 var entryId = marker_type + ':' + marker_i;
 
@@ -299,7 +410,11 @@
                 var entryTitle = document.createElement('button');
                 entryTitle.type = 'button';
                 entryTitle.className = 'sidebar-entry-title';
-                entryTitle.textContent = marker_title_text(marker, marker_type);
+                if (includeCategoryLabel) {
+                    entryTitle.textContent = category_title_text(markers, marker_type) + ' - ' + marker_title_text(marker, marker_type);
+                } else {
+                    entryTitle.textContent = marker_title_text(marker, marker_type);
+                }
                 entryTitle.addEventListener('click', function() {
                     var t = this.getAttribute('data-type');
                     var i = this.getAttribute('data-index');
@@ -473,6 +588,7 @@
                 var grouping = get_sidebar_grouping();
 
                 sidebar.innerHTML = '';
+                update_district_focus_ui();
 
                 var markerTypes = Object.keys(markers);
                 markerTypes.sort(function(a, b) {
@@ -511,23 +627,24 @@
 
                         var districtTotal = 0;
                         var districtComplete = 0;
-                        var districtTypeData = [];
+                        var districtVisibleEntries = [];
                         for (var ti = 0; ti < markerTypes.length; ti++) {
                             var typeId = markerTypes[ti];
                             var allIdx = get_marker_indices(markers, typeId, true, districtId);
                             if (allIdx.length == 0) continue;
-                            var done = 0;
-                            for (var ci = 0; ci < allIdx.length; ci++) {
-                                if (markers[typeId]["markers"][allIdx[ci]].completed) done += 1;
-                            }
-                            districtTypeData.push({
-                                marker_type: typeId,
-                                all_indices: allIdx,
-                                visible_indices: get_marker_indices(markers, typeId, showCompleted, districtId),
-                                complete_count: done,
-                            });
+
                             districtTotal += allIdx.length;
-                            districtComplete += done;
+                            for (var ci = 0; ci < allIdx.length; ci++) {
+                                if (markers[typeId]["markers"][allIdx[ci]].completed) districtComplete += 1;
+                            }
+
+                            var visibleIdx = get_marker_indices(markers, typeId, showCompleted, districtId);
+                            for (var viList = 0; viList < visibleIdx.length; viList++) {
+                                districtVisibleEntries.push({
+                                    marker_type: typeId,
+                                    marker_i: visibleIdx[viList],
+                                });
+                            }
                         }
 
                         if (districtTotal == 0) continue;
@@ -562,10 +679,25 @@
                         districtCounts.className = 'sidebar-category-counts';
                         districtCounts.textContent = districtComplete + ' / ' + districtTotal;
 
+                        var districtFocus = document.createElement('button');
+                        districtFocus.type = 'button';
+                        districtFocus.className = 'sidebar-top-action';
+                        districtFocus.textContent = (get_focused_district_id() == districtId) ? 'Unfocus' : 'Focus';
+                        districtFocus.setAttribute('data-district', districtId);
+                        districtFocus.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            focus_district(mymap, markers, this.getAttribute('data-district'));
+                        });
+
+                        var districtRight = document.createElement('div');
+                        districtRight.className = 'sidebar-entry-actions';
+
                         districtLeft.appendChild(districtExpand);
                         districtLeft.appendChild(districtTitle);
                         districtHeader.appendChild(districtLeft);
-                        districtHeader.appendChild(districtCounts);
+                        districtRight.appendChild(districtCounts);
+                        districtRight.appendChild(districtFocus);
+                        districtHeader.appendChild(districtRight);
                         districtSection.appendChild(districtHeader);
 
                         var districtProgress = document.createElement('div');
@@ -580,77 +712,26 @@
                         if (!sidebarState.openDistricts[districtId]) {
                             districtContent.style.display = 'none';
                         }
+                        districtVisibleEntries.sort(function(a, b) {
+                            var ac = category_title_text(markers, a.marker_type);
+                            var bc = category_title_text(markers, b.marker_type);
+                            var byCat = ac.localeCompare(bc, undefined, { sensitivity: 'base' });
+                            if (byCat != 0) return byCat;
 
-                        for (var dt = 0; dt < districtTypeData.length; dt++) {
-                            var typeData = districtTypeData[dt];
-                            var catKey = districtId + ':' + typeData.marker_type;
+                            var am = markers[a.marker_type]["markers"][a.marker_i];
+                            var bm = markers[b.marker_type]["markers"][b.marker_i];
+                            var at = marker_title_text(am, a.marker_type);
+                            var bt = marker_title_text(bm, b.marker_type);
+                            return at.localeCompare(bt, undefined, { sensitivity: 'base' });
+                        });
 
-                            var catWrap = document.createElement('div');
-                            catWrap.className = 'sidebar-district-category';
-                            if (markers[typeData.marker_type].visibility != 'visible') {
-                                catWrap.className += ' is-hidden';
-                            }
-
-                            var catHeader = document.createElement('div');
-                            catHeader.className = 'sidebar-category-header';
-
-                            var catLeft = document.createElement('div');
-                            catLeft.className = 'sidebar-category-left';
-
-                            var catVis = document.createElement('button');
-                            catVis.type = 'button';
-                            catVis.className = 'sidebar-visibility';
-                            catVis.setAttribute('aria-label', 'Show/hide category on map');
-                            catVis.textContent = markers[typeData.marker_type].visibility == 'visible' ? '👁' : '🚫';
-                            catVis.setAttribute('data-type', typeData.marker_type);
-                            catVis.addEventListener('click', function(ev) {
-                                ev.preventDefault();
-                                var t = this.getAttribute('data-type');
-                                markers[t].visibility = markers[t].visibility == 'visible' ? 'hidden' : 'visible';
-                                update_markers(mymap, markers);
-                                update_toggle_all_button(markers);
-                                build_sidebar(mymap, markers);
-                            });
-
-                            var catExpand = document.createElement('button');
-                            catExpand.className = 'sidebar-expand';
-                            catExpand.type = 'button';
-                            catExpand.setAttribute('aria-label', 'Toggle category');
-                            catExpand.textContent = sidebarState.openDistrictCategories[catKey] ? '▾' : '▸';
-                            catExpand.setAttribute('data-key', catKey);
-                            catExpand.addEventListener('click', function(ev) {
-                                ev.preventDefault();
-                                var key = this.getAttribute('data-key');
-                                sidebarState.openDistrictCategories[key] = !sidebarState.openDistrictCategories[key];
-                                build_sidebar(mymap, markers);
-                            });
-
-                            var catTitle = document.createElement('div');
-                            catTitle.className = 'sidebar-category-title';
-                            catTitle.textContent = category_title_text(markers, typeData.marker_type);
-
-                            var catCounts = document.createElement('div');
-                            catCounts.className = 'sidebar-category-counts';
-                            catCounts.textContent = typeData.complete_count + ' / ' + typeData.all_indices.length;
-
-                            catLeft.appendChild(catVis);
-                            catLeft.appendChild(catExpand);
-                            catLeft.appendChild(catTitle);
-                            catHeader.appendChild(catLeft);
-                            catHeader.appendChild(catCounts);
-                            catWrap.appendChild(catHeader);
-
-                            var pointList = document.createElement('ul');
-                            pointList.className = 'sidebar-entry-list';
-                            if (!sidebarState.openDistrictCategories[catKey]) {
-                                pointList.style.display = 'none';
-                            }
-                            for (var vi = 0; vi < typeData.visible_indices.length; vi++) {
-                                pointList.appendChild(create_sidebar_entry(mymap, markers, typeData.marker_type, typeData.visible_indices[vi]));
-                            }
-                            catWrap.appendChild(pointList);
-                            districtContent.appendChild(catWrap);
+                        var districtList = document.createElement('ul');
+                        districtList.className = 'sidebar-entry-list';
+                        for (var dve = 0; dve < districtVisibleEntries.length; dve++) {
+                            var entry = districtVisibleEntries[dve];
+                            districtList.appendChild(create_sidebar_entry(mymap, markers, entry.marker_type, entry.marker_i, true));
                         }
+                        districtContent.appendChild(districtList);
 
                         districtSection.appendChild(districtContent);
                         sidebar.appendChild(districtSection);
@@ -739,7 +820,7 @@
 
                     var visibleIndices = get_marker_indices(markers, marker_type, showCompleted, null);
                     for (var vi2 = 0; vi2 < visibleIndices.length; vi2++) {
-                        list.appendChild(create_sidebar_entry(mymap, markers, marker_type, visibleIndices[vi2]));
+                        list.appendChild(create_sidebar_entry(mymap, markers, marker_type, visibleIndices[vi2], false));
                     }
 
                     section.appendChild(list);
@@ -834,12 +915,29 @@
                             return response.json();
                         })
                         .catch(function() { return {districts: []}; }),
+                    fetch('district-points.json')
+                        .then(function(response) {
+                            if (!response.ok) return null;
+                            return response.json();
+                        })
+                        .catch(function() { return null; }),
                 ]).then(function(result) {
                     var markers = result[0];
                     var districtsData = result[1];
+                    districtPointIndex = result[2];
+                    if (districtPointIndex && districtPointIndex.points && districtPointIndex.points.constructor == Array) {
+                        districtPointIndex.pointDistrictById = {};
+                        for (var pi = 0; pi < districtPointIndex.points.length; pi++) {
+                            var point = districtPointIndex.points[pi];
+                            if (!point || !point.id) continue;
+                            var districtIds = point.district_ids || [];
+                            districtPointIndex.pointDistrictById[point.id] = districtIds.length ? districtIds[0] : null;
+                        }
+                    }
 
                     initialize_districts(mymap, districtsData);
                     initialize(mymap, markers);
+                    show_district_validation_badge();
 
                     var search = document.getElementById('sidebarSearch');
                     if (search) {
@@ -894,16 +992,15 @@
                         if (!marker.tiles) {
                             marker.tiles = "main";
                         }
-                        marker._district_id = marker_district_id(marker);
+                        marker._marker_type = marker_type;
+                        marker._marker_i = marker_i;
+                        marker._district_id = marker_district_id(marker_type, marker_i);
                         if (marker.tiles != tiles) {
                             continue;
                         }
                         if (completed[marker_type]) {
                             marker.completed = completed[marker_type].indexOf(marker_i) != -1;
                         }
-
-                        marker._marker_type = marker_type;
-                        marker._marker_i = marker_i;
 
                         marker.marker = L.marker(marker["coords"], {icon: icon}).addTo(mymap);
 
@@ -994,11 +1091,28 @@
                     });
                 }
 
-                var sidebarGrouping = document.getElementById('sidebarGrouping');
-                if (sidebarGrouping) {
-                    sidebarGrouping.addEventListener('change', function() {
-                        build_sidebar(mymap, markers);
+                var clearDistrictFocus = document.getElementById('clearDistrictFocus');
+                if (clearDistrictFocus) {
+                    clearDistrictFocus.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        clear_district_focus(mymap, markers, true);
                     });
+                    update_district_focus_ui();
+                }
+
+                var sidebarTabs = document.querySelectorAll('.sidebar-tab');
+                if (sidebarTabs && sidebarTabs.length > 0) {
+                    for (var sti = 0; sti < sidebarTabs.length; sti++) {
+                        sidebarTabs[sti].addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            var allTabs = document.querySelectorAll('.sidebar-tab');
+                            for (var ti = 0; ti < allTabs.length; ti++) {
+                                L.DomUtil.removeClass(allTabs[ti], 'is-active');
+                            }
+                            L.DomUtil.addClass(this, 'is-active');
+                            build_sidebar(mymap, markers);
+                        });
+                    }
                 }
 
                 var toggleAll = document.getElementById('toggleAll');
@@ -1112,12 +1226,31 @@
                 box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
             }
 
-            .sidebar-select {
+            .sidebar-tabs {
+                display: inline-flex;
                 border: 1px solid rgba(0,0,0,0.14);
-                background: rgba(255,255,255,0.95);
                 border-radius: 9px;
+                overflow: hidden;
+                background: rgba(255,255,255,0.95);
+            }
+
+            .sidebar-tab {
+                border: none;
+                border-right: 1px solid rgba(0,0,0,0.10);
+                background: transparent;
                 padding: 6px 10px;
                 font: 12px/14px Arial, Helvetica, sans-serif;
+                cursor: pointer;
+                white-space: nowrap;
+            }
+
+            .sidebar-tab:last-child {
+                border-right: none;
+            }
+
+            .sidebar-tab.is-active {
+                background: rgba(0,0,0,0.10);
+                font-weight: 700;
             }
 
             .sidebar-filters label {
@@ -1315,17 +1448,6 @@
                 padding: 0 10px 12px 10px;
             }
 
-            .sidebar-district-category {
-                margin: 0 8px 8px 8px;
-                border: 1px solid rgba(0,0,0,0.07);
-                border-radius: 8px;
-                background: rgba(255,255,255,0.7);
-            }
-
-            .sidebar-district-category.is-hidden {
-                opacity: 0.65;
-            }
-
             .sidebar-action {
                 border: 1px solid rgba(0,0,0,0.14);
                 background: rgba(255,255,255,0.9);
@@ -1478,11 +1600,12 @@
                     <h2>Items</h2>
                     <div class="sidebar-filters">
                         <input id="sidebarSearch" class="sidebar-search" type="search" placeholder="Search..." autocomplete="off" spellcheck="false">
-                        <select id="sidebarGrouping" class="sidebar-select">
-                            <option value="category">Category -> Point</option>
-                            <option value="district">District -> Category -> Point</option>
-                        </select>
+                        <div class="sidebar-tabs" role="tablist" aria-label="Sidebar grouping">
+                            <button type="button" class="sidebar-tab is-active" data-grouping="category">Category</button>
+                            <button type="button" class="sidebar-tab" data-grouping="district">District</button>
+                        </div>
                         <button id="toggleAll" type="button" class="sidebar-top-action">Hide all</button>
+                        <button id="clearDistrictFocus" type="button" class="sidebar-top-action" style="display:none">Clear district focus</button>
                         <label>
                             <input id="hideCompleted" type="checkbox" checked>
                             <span>Hide completed</span>
@@ -1492,7 +1615,7 @@
                             <span>Zoom to results</span>
                         </label>
                         <label>
-                            <input id="showDistricts" type="checkbox" checked>
+                            <input id="showDistricts" type="checkbox">
                             <span>Show districts</span>
                         </label>
                         <label>

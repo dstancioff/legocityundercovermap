@@ -1,0 +1,540 @@
+{
+  "summary": {
+    "unassigned_total": 44,
+    "by_tiles": {
+      "dojo_temple": 22,
+      "secret_base": 18,
+      "miner_altercation": 4
+    }
+  },
+  "points": [
+    {
+      "point_id": "character-token:0",
+      "tiles": "dojo_temple",
+      "coords": [
+        -49.15,
+        53.96
+      ],
+      "category": "character-token",
+      "title": "Barry Smith",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "character-token:1",
+      "tiles": "secret_base",
+      "coords": [
+        -80.7,
+        65.04
+      ],
+      "category": "character-token",
+      "title": "Submarine Captain",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "character-token:2",
+      "tiles": "secret_base",
+      "coords": [
+        48.94,
+        -24.01
+      ],
+      "category": "character-token",
+      "title": "Henrik Kowalski (no map)",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "character-token:51",
+      "tiles": "miner_altercation",
+      "coords": [
+        -41.77,
+        60.47
+      ],
+      "category": "character-token",
+      "title": "Spikey Don (Robber)",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "helicopter-token:7",
+      "tiles": "secret_base",
+      "coords": [
+        46.44,
+        57.3
+      ],
+      "category": "helicopter-token",
+      "title": "Jupiter",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:0",
+      "tiles": "dojo_temple",
+      "coords": [
+        29.16,
+        94.25
+      ],
+      "category": "police-shield-fragment",
+      "title": "paint statue",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:1",
+      "tiles": "dojo_temple",
+      "coords": [
+        28.86,
+        81.24
+      ],
+      "category": "police-shield-fragment",
+      "title": "paint statue",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:10",
+      "tiles": "dojo_temple",
+      "coords": [
+        -21.78,
+        -69.61
+      ],
+      "category": "police-shield-fragment",
+      "title": "lantern",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:11",
+      "tiles": "dojo_temple",
+      "coords": [
+        -21.94,
+        -77.7
+      ],
+      "category": "police-shield-fragment",
+      "title": "lantern",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:12",
+      "tiles": "dojo_temple",
+      "coords": [
+        -21.45,
+        -92.99
+      ],
+      "category": "police-shield-fragment",
+      "title": "lantern",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:13",
+      "tiles": "dojo_temple",
+      "coords": [
+        -22.11,
+        -97.21
+      ],
+      "category": "police-shield-fragment",
+      "title": "lantern",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:14",
+      "tiles": "dojo_temple",
+      "coords": [
+        -9.97,
+        -114.26
+      ],
+      "category": "police-shield-fragment",
+      "title": "lantern",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:15",
+      "tiles": "dojo_temple",
+      "coords": [
+        -10.83,
+        -63.28
+      ],
+      "category": "police-shield-fragment",
+      "title": "hat stand",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:16",
+      "tiles": "dojo_temple",
+      "coords": [
+        -11.18,
+        -106.17
+      ],
+      "category": "police-shield-fragment",
+      "title": "hat stand",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:17",
+      "tiles": "dojo_temple",
+      "coords": [
+        -39.5,
+        -70.49
+      ],
+      "category": "police-shield-fragment",
+      "title": "hat stand",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:18",
+      "tiles": "secret_base",
+      "coords": [
+        65.07,
+        -137.11
+      ],
+      "category": "police-shield-fragment",
+      "title": "rex fury crate (1/3)",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:19",
+      "tiles": "secret_base",
+      "coords": [
+        48.94,
+        -24.01
+      ],
+      "category": "police-shield-fragment",
+      "title": "rex fury crate (2/3) (no map)",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:2",
+      "tiles": "dojo_temple",
+      "coords": [
+        -52.7,
+        82.09
+      ],
+      "category": "police-shield-fragment",
+      "title": "paint statue",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:20",
+      "tiles": "secret_base",
+      "coords": [
+        48.94,
+        -24.01
+      ],
+      "category": "police-shield-fragment",
+      "title": "rex fury crate (3/3) (no map)",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:21",
+      "tiles": "secret_base",
+      "coords": [
+        -78.29,
+        -72.45
+      ],
+      "category": "police-shield-fragment",
+      "title": "locker",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:22",
+      "tiles": "secret_base",
+      "coords": [
+        -73.38,
+        -55.31
+      ],
+      "category": "police-shield-fragment",
+      "title": "locker",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:23",
+      "tiles": "secret_base",
+      "coords": [
+        -63.71,
+        -15.59
+      ],
+      "category": "police-shield-fragment",
+      "title": "locker",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:24",
+      "tiles": "secret_base",
+      "coords": [
+        -79.97,
+        -26.84
+      ],
+      "category": "police-shield-fragment",
+      "title": "locker",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:25",
+      "tiles": "secret_base",
+      "coords": [
+        -73.61,
+        59.77
+      ],
+      "category": "police-shield-fragment",
+      "title": "locker",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:26",
+      "tiles": "secret_base",
+      "coords": [
+        -73.48,
+        -35.1
+      ],
+      "category": "police-shield-fragment",
+      "title": "flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:27",
+      "tiles": "secret_base",
+      "coords": [
+        -77.62,
+        -32.99
+      ],
+      "category": "police-shield-fragment",
+      "title": "flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:28",
+      "tiles": "secret_base",
+      "coords": [
+        -81.26,
+        -43.19
+      ],
+      "category": "police-shield-fragment",
+      "title": "flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:29",
+      "tiles": "secret_base",
+      "coords": [
+        -73.71,
+        62.93
+      ],
+      "category": "police-shield-fragment",
+      "title": "flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:3",
+      "tiles": "dojo_temple",
+      "coords": [
+        -52.7,
+        92.64
+      ],
+      "category": "police-shield-fragment",
+      "title": "paint statue",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:4",
+      "tiles": "dojo_temple",
+      "coords": [
+        26.12,
+        59.94
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:5",
+      "tiles": "dojo_temple",
+      "coords": [
+        -42.42,
+        61.35
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:6",
+      "tiles": "dojo_temple",
+      "coords": [
+        -42.81,
+        72.42
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:7",
+      "tiles": "dojo_temple",
+      "coords": [
+        -42.29,
+        101.25
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:8",
+      "tiles": "dojo_temple",
+      "coords": [
+        -42.42,
+        112.32
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "police-shield-fragment:9",
+      "tiles": "dojo_temple",
+      "coords": [
+        23.4,
+        116.37
+      ],
+      "category": "police-shield-fragment",
+      "title": "water flowers",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "red-brick:0",
+      "tiles": "secret_base",
+      "coords": [
+        -53.1,
+        87.29
+      ],
+      "category": "red-brick",
+      "title": "",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "red-brick:1",
+      "tiles": "secret_base",
+      "coords": [
+        -74.04,
+        -39.58
+      ],
+      "category": "red-brick",
+      "title": "Noppen x8",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "red-brick:2",
+      "tiles": "miner_altercation",
+      "coords": [
+        70.79,
+        -22.85
+      ],
+      "category": "red-brick",
+      "title": "Oneindig dynamiet",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "super-build:0",
+      "tiles": "dojo_temple",
+      "coords": [
+        -1.76,
+        -86.13
+      ],
+      "category": "super-build",
+      "title": "Dragon",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "vehicle-token:0",
+      "tiles": "dojo_temple",
+      "coords": [
+        -47.49,
+        121.57
+      ],
+      "category": "vehicle-token",
+      "title": "Hairdryer",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "vehicle-token:1",
+      "tiles": "dojo_temple",
+      "coords": [
+        -2.46,
+        -104.77
+      ],
+      "category": "vehicle-token",
+      "title": "Roar",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "vehicle-token:2",
+      "tiles": "secret_base",
+      "coords": [
+        61.86,
+        89.12
+      ],
+      "category": "vehicle-token",
+      "title": "Rex's brute",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "vehicle-token:3",
+      "tiles": "miner_altercation",
+      "coords": [
+        73.12,
+        22.15
+      ],
+      "category": "vehicle-token",
+      "title": "Steadfast",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    },
+    {
+      "point_id": "vehicle-token:4",
+      "tiles": "miner_altercation",
+      "coords": [
+        -50.4,
+        121.46
+      ],
+      "category": "vehicle-token",
+      "title": "Dumper",
+      "reason": "No district is defined for this tileset in districts.json.",
+      "action": "no redraw (district map only covers main tiles)"
+    }
+  ]
+}

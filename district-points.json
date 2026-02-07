@@ -4,8 +4,8 @@
     "source_districts": "districts.json",
     "total_points": 866,
     "district_count": 22,
-    "assigned_point_count": 772,
-    "unassigned_point_count": 94,
+    "assigned_point_count": 820,
+    "unassigned_point_count": 46,
     "ambiguous_point_count": 0
   },
   "districts": [
@@ -15,9 +15,10 @@
         "en": "Cherry Tree Hills"
       },
       "tiles": "main",
-      "point_count": 73,
+      "point_count": 74,
       "point_ids": [
         "atm:9",
+        "boulder:11",
         "call-in-point:10",
         "car-jack:5",
         "cat:9",
@@ -98,7 +99,7 @@
         "en": "Auburn"
       },
       "tiles": "main",
-      "point_count": 57,
+      "point_count": 62,
       "point_ids": [
         "alien:10",
         "atm:10",
@@ -112,10 +113,12 @@
         "character-token:128",
         "character-token:129",
         "character-token:130",
+        "character-token:133",
         "character-token:134",
         "character-token:137",
         "character-token:138",
         "character-token:150",
+        "character-token:153",
         "character-token:154",
         "character-token:159",
         "character-token:163",
@@ -136,6 +139,7 @@
         "disguise-booth:9",
         "district-conquered:12",
         "drill-thrill:10",
+        "fire-extinguished:11",
         "free-run:11",
         "gang:10",
         "helicopter-token:6",
@@ -149,10 +153,12 @@
         "super-build:39",
         "super-build:40",
         "super-build:41",
+        "time-trial:10",
         "train-station:9",
         "vehicle-token:41",
         "vehicle-token:42",
         "vehicle-token:43",
+        "vehicle-token:44",
         "vehicle-token:45",
         "water-flowers:11",
         "water-flowers:12",
@@ -181,20 +187,24 @@
         "en": "Fort Meadows"
       },
       "tiles": "main",
-      "point_count": 41,
+      "point_count": 51,
       "point_ids": [
         "alien:6",
         "atm:7",
         "boulder:6",
         "call-in-point:0",
+        "call-in-point:1",
         "cat:5",
         "character-token:100",
+        "character-token:106",
         "character-token:107",
         "character-token:110",
         "character-token:12",
         "character-token:13",
         "character-token:206",
         "character-token:219",
+        "character-token:231",
+        "character-token:232",
         "character-token:241",
         "character-token:248",
         "character-token:300",
@@ -202,6 +212,8 @@
         "character-token:73",
         "character-token:83",
         "character-token:84",
+        "character-token:85",
+        "character-token:86",
         "character-token:97",
         "coffee-break:6",
         "coffee-break:7",
@@ -209,6 +221,7 @@
         "disguise-booth:4",
         "district-conquered:6",
         "drill-thrill:5",
+        "fire-extinguished:7",
         "free-run:7",
         "gang:5",
         "pig:7",
@@ -218,12 +231,15 @@
         "super-build:18",
         "super-build:19",
         "super-build:20",
+        "super-build:21",
         "time-trial:3",
         "train-station:6",
         "vehicle-token:13",
         "vehicle-token:34",
         "vehicle-token:6",
-        "vehicle-token:8"
+        "vehicle-token:7",
+        "vehicle-token:8",
+        "water-flowers:6"
       ]
     },
     {
@@ -232,20 +248,18 @@
         "en": "Bluebell National Park"
       },
       "tiles": "main",
-      "point_count": 75,
+      "point_count": 69,
       "point_ids": [
         "alien:7",
         "atm:6",
         "boulder:7",
         "boulder:8",
-        "call-in-point:1",
         "call-in-point:8",
         "car-jack:4",
         "cat:6",
         "challenge-entrance:1",
         "challenge-entrance:2",
         "challenge-entrance:3",
-        "character-token:106",
         "character-token:115",
         "character-token:116",
         "character-token:117",
@@ -275,7 +289,6 @@
         "character-token:29",
         "character-token:66",
         "character-token:81",
-        "character-token:86",
         "character-token:87",
         "character-token:88",
         "character-token:9",
@@ -283,7 +296,6 @@
         "disguise-booth:5",
         "district-conquered:7",
         "drill-thrill:6",
-        "fire-extinguished:7",
         "fire-extinguished:8",
         "free-run:8",
         "gang:6",
@@ -295,7 +307,6 @@
         "super-brick:5",
         "super-brick:7",
         "super-build:16",
-        "super-build:21",
         "super-build:22",
         "super-build:23",
         "super-build:24",
@@ -307,7 +318,6 @@
         "vehicle-token:11",
         "vehicle-token:12",
         "vehicle-token:28",
-        "vehicle-token:7",
         "vehicle-token:9"
       ]
     },
@@ -317,14 +327,10 @@
         "en": "Blackwell Bridge"
       },
       "tiles": "main",
-      "point_count": 7,
+      "point_count": 3,
       "point_ids": [
         "boulder:5",
-        "character-token:258",
         "character-token:67",
-        "color-swapper:0",
-        "color-swapper:1",
-        "district-conquered:5",
         "red-brick:8"
       ]
     },
@@ -334,7 +340,7 @@
         "en": "Uptown"
       },
       "tiles": "main",
-      "point_count": 45,
+      "point_count": 51,
       "point_ids": [
         "alien:5",
         "atm:5",
@@ -355,9 +361,12 @@
         "character-token:244",
         "character-token:256",
         "character-token:257",
+        "character-token:258",
+        "character-token:259",
         "character-token:264",
         "character-token:285",
         "character-token:293",
+        "character-token:294",
         "character-token:295",
         "character-token:296",
         "character-token:297",
@@ -365,8 +374,11 @@
         "character-token:44",
         "character-token:45",
         "coffee-break:5",
+        "color-swapper:0",
+        "color-swapper:1",
         "crash-mat:0",
         "disguise-booth:3",
+        "district-conquered:5",
         "drill-thrill:4",
         "free-run:6",
         "gang:4",
@@ -421,7 +433,7 @@
         "en": "LEGO City Airport"
       },
       "tiles": "main",
-      "point_count": 43,
+      "point_count": 44,
       "point_ids": [
         "alien:4",
         "boulder:3",
@@ -450,6 +462,7 @@
         "free-run:4",
         "helicopter-token:1",
         "pig:5",
+        "red-brick:10",
         "silver-statue:3",
         "super-build:10",
         "super-build:11",
@@ -531,7 +544,7 @@
         "en": "Paradise Sands"
       },
       "tiles": "main",
-      "point_count": 62,
+      "point_count": 60,
       "point_ids": [
         "alien:12",
         "atm:12",
@@ -540,7 +553,6 @@
         "car-jack:8",
         "car-jack:9",
         "cat:12",
-        "challenge-entrance:10",
         "challenge-entrance:8",
         "challenge-entrance:9",
         "character-token:101",
@@ -573,7 +585,6 @@
         "fire-extinguished:15",
         "free-run:14",
         "gang:11",
-        "helicopter-platform:1",
         "pig:15",
         "police-shield-fragment:30",
         "red-brick:12",
@@ -616,16 +627,20 @@
         "en": "Fresco"
       },
       "tiles": "main",
-      "point_count": 36,
+      "point_count": 51,
       "point_ids": [
         "alien:13",
         "atm:13",
+        "boulder:16",
         "call-in-point:13",
+        "car-jack:10",
         "cat:14",
+        "challenge-entrance:10",
         "character-token:109",
         "character-token:148",
         "character-token:220",
         "character-token:250",
+        "character-token:36",
         "character-token:39",
         "character-token:40",
         "character-token:50",
@@ -634,9 +649,11 @@
         "character-token:54",
         "character-token:55",
         "character-token:56",
+        "character-token:65",
         "character-token:70",
         "character-token:74",
         "character-token:78",
+        "coffee-break:15",
         "crash-mat:3",
         "disguise-booth:14",
         "district-conquered:17",
@@ -644,13 +661,22 @@
         "fire-extinguished:13",
         "free-run:15",
         "gang:12",
+        "helicopter-platform:1",
         "pig:16",
         "red-brick:16",
         "red-brick:17",
         "silver-statue:13",
         "super-build:47",
+        "super-build:48",
         "super-build:54",
+        "time-trial:12",
+        "time-trial:14",
         "train-station:11",
+        "vehicle-theft:5",
+        "vehicle-token:49",
+        "vehicle-token:50",
+        "vehicle-token:51",
+        "vehicle-token:52",
         "vehicle-token:53",
         "vehicle-token:54",
         "water-flowers:15"
@@ -662,8 +688,11 @@
         "en": "Grand Canal"
       },
       "tiles": "main",
-      "point_count": 0,
-      "point_ids": []
+      "point_count": 2,
+      "point_ids": [
+        "boulder:17",
+        "coffee-break:16"
+      ]
     },
     {
       "id": "pagoda",
@@ -671,17 +700,24 @@
         "en": "Pagoda"
       },
       "tiles": "main",
-      "point_count": 39,
+      "point_count": 61,
       "point_ids": [
         "alien:15",
         "atm:14",
+        "atm:15",
         "boulder:0",
+        "call-in-point:6",
+        "car-jack:11",
         "cat:15",
         "challenge-entrance:11",
         "character-token:111",
+        "character-token:112",
         "character-token:113",
         "character-token:114",
         "character-token:132",
+        "character-token:157",
+        "character-token:208",
+        "character-token:261",
         "character-token:27",
         "character-token:271",
         "character-token:272",
@@ -689,28 +725,43 @@
         "character-token:274",
         "character-token:28",
         "character-token:304",
+        "character-token:37",
         "character-token:41",
         "character-token:42",
         "character-token:57",
+        "character-token:58",
         "character-token:59",
         "character-token:60",
         "character-token:61",
+        "character-token:7",
         "character-token:71",
+        "character-token:72",
         "character-token:79",
+        "coffee-break:17",
         "coffee-break:18",
         "crash-mat:6",
+        "disguise-booth:12",
+        "disguise-booth:15",
         "district-conquered:18",
         "drill-thrill:15",
         "fire-extinguished:14",
         "free-run:16",
+        "gang:13",
         "gang:14",
         "pig:18",
+        "pig:19",
         "red-brick:15",
+        "silver-statue:14",
         "super-brick:2",
+        "super-build:50",
+        "super-build:51",
         "super-build:52",
         "super-build:53",
         "train-station:4",
         "vehicle-theft:6",
+        "vehicle-token:64",
+        "vehicle-token:65",
+        "vehicle-token:66",
         "water-flowers:17"
       ]
     },
@@ -720,9 +771,10 @@
         "en": "Festival Square"
       },
       "tiles": "main",
-      "point_count": 23,
+      "point_count": 27,
       "point_ids": [
         "alien:0",
+        "atm:0",
         "atm:1",
         "call-in-point:5",
         "car-jack:0",
@@ -731,14 +783,17 @@
         "character-token:181",
         "character-token:190",
         "character-token:202",
+        "character-token:203",
         "character-token:251",
         "character-token:287",
         "coffee-break:0",
         "disguise-booth:0",
         "district-conquered:1",
         "drill-thrill:0",
+        "fire-extinguished:1",
         "free-run:1",
         "gang:0",
+        "pig:1",
         "red-brick:20",
         "super-build:13",
         "train-station:0",
@@ -753,11 +808,10 @@
         "en": "King's Court"
       },
       "tiles": "main",
-      "point_count": 40,
+      "point_count": 34,
       "point_ids": [
         "alien:1",
         "atm:2",
-        "boulder:16",
         "call-in-point:2",
         "cat:1",
         "character-token:222",
@@ -765,9 +819,7 @@
         "character-token:25",
         "character-token:32",
         "character-token:321",
-        "character-token:36",
         "character-token:5",
-        "character-token:65",
         "character-token:8",
         "character-token:91",
         "character-token:96",
@@ -786,13 +838,10 @@
         "super-build:2",
         "super-build:3",
         "super-build:4",
-        "super-build:48",
         "time-trial:0",
         "train-station:1",
         "vehicle-theft:1",
-        "vehicle-theft:5",
         "vehicle-token:48",
-        "vehicle-token:51",
         "vehicle-token:69",
         "water-flowers:2"
       ]
@@ -1236,7 +1285,9 @@
         9.74
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "festival-square"
+      ]
     },
     {
       "id": "atm:1",
@@ -1332,7 +1383,9 @@
         -16.42
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "atm:16",
@@ -1512,7 +1565,9 @@
         -107.96
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "cherry-tree-hills"
+      ]
     },
     {
       "id": "boulder:12",
@@ -1581,7 +1636,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -1594,7 +1649,9 @@
         16.7
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "grand-canal"
+      ]
     },
     {
       "id": "boulder:18",
@@ -1761,7 +1818,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -1886,7 +1943,9 @@
         -16.08
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "call-in-point:7",
@@ -1968,7 +2027,9 @@
         55.46
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "car-jack:11",
@@ -1980,7 +2041,9 @@
         -5.36
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "car-jack:12",
@@ -2371,7 +2434,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "paradise-sands"
+        "fresco"
       ]
     },
     {
@@ -2661,7 +2724,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -2758,7 +2821,9 @@
         -16.78
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:113",
@@ -3078,7 +3143,9 @@
         -81.08
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "auburn"
+      ]
     },
     {
       "id": "character-token:134",
@@ -3384,7 +3451,9 @@
         -81.43
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "auburn"
+      ]
     },
     {
       "id": "character-token:154",
@@ -3438,7 +3507,9 @@
         -14.57
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:158",
@@ -4160,7 +4231,9 @@
         -7.48
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "festival-square"
+      ]
     },
     {
       "id": "character-token:204",
@@ -4228,7 +4301,9 @@
         -14.57
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:209",
@@ -4590,7 +4665,9 @@
         -130.24
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fort-meadows"
+      ]
     },
     {
       "id": "character-token:232",
@@ -4602,7 +4679,9 @@
         -130.33
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fort-meadows"
+      ]
     },
     {
       "id": "character-token:233",
@@ -4993,7 +5072,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "blackwell-bridge"
+        "uptown"
       ]
     },
     {
@@ -5006,7 +5085,9 @@
         -35.6
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "uptown"
+      ]
     },
     {
       "id": "character-token:26",
@@ -5046,7 +5127,9 @@
         -19.94
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:262",
@@ -5548,7 +5631,9 @@
         -31.25
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "uptown"
+      ]
     },
     {
       "id": "character-token:295",
@@ -6065,7 +6150,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -6078,7 +6163,9 @@
         -14.15
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:38",
@@ -6396,7 +6483,9 @@
         -16.78
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:59",
@@ -6507,7 +6596,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -6576,7 +6665,9 @@
         -5.25
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:70",
@@ -6616,7 +6707,9 @@
         -3.75
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "character-token:73",
@@ -6810,7 +6903,9 @@
         -131.5
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fort-meadows"
+      ]
     },
     {
       "id": "character-token:86",
@@ -6823,7 +6918,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -7130,7 +7225,9 @@
         44.03
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "coffee-break:16",
@@ -7142,7 +7239,9 @@
         16.26
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "grand-canal"
+      ]
     },
     {
       "id": "coffee-break:17",
@@ -7154,7 +7253,9 @@
         -21.53
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "coffee-break:18",
@@ -7293,7 +7394,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "blackwell-bridge"
+        "uptown"
       ]
     },
     {
@@ -7307,7 +7408,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "blackwell-bridge"
+        "uptown"
       ]
     },
     {
@@ -7544,7 +7645,9 @@
         -0.62
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "disguise-booth:13",
@@ -7584,7 +7687,9 @@
         -16.06
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "disguise-booth:2",
@@ -7905,7 +8010,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "blackwell-bridge"
+        "uptown"
       ]
     },
     {
@@ -8268,7 +8373,9 @@
         -8.98
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "festival-square"
+      ]
     },
     {
       "id": "fire-extinguished:10",
@@ -8294,7 +8401,9 @@
         -80.67
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "auburn"
+      ]
     },
     {
       "id": "fire-extinguished:12",
@@ -8447,7 +8556,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -8796,7 +8905,9 @@
         -16.88
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "gang:14",
@@ -8949,7 +9060,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "paradise-sands"
+        "fresco"
       ]
     },
     {
@@ -9100,7 +9211,9 @@
         7.46
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "festival-square"
+      ]
     },
     {
       "id": "pig:10",
@@ -9238,7 +9351,9 @@
         -16.52
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "pig:2",
@@ -9760,7 +9875,9 @@
         30.72
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "lego-city-airport"
+      ]
     },
     {
       "id": "red-brick:11",
@@ -10162,7 +10279,9 @@
         -14.39
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "silver-statue:2",
@@ -10593,7 +10712,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -10999,7 +11118,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -11038,7 +11157,9 @@
         -7.91
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "super-build:51",
@@ -11050,7 +11171,9 @@
         -16.08
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "super-build:52",
@@ -11230,7 +11353,9 @@
         -81.39
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "auburn"
+      ]
     },
     {
       "id": "time-trial:11",
@@ -11256,7 +11381,9 @@
         50.45
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "time-trial:13",
@@ -11282,7 +11409,9 @@
         57.57
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "time-trial:2",
@@ -11673,7 +11802,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -12264,7 +12393,9 @@
         -81.39
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "auburn"
+      ]
     },
     {
       "id": "vehicle-token:45",
@@ -12332,7 +12463,9 @@
         50.55
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "vehicle-token:5",
@@ -12358,7 +12491,9 @@
         58.38
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "vehicle-token:51",
@@ -12371,7 +12506,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "kings-court"
+        "fresco"
       ]
     },
     {
@@ -12384,7 +12519,9 @@
         56.71
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fresco"
+      ]
     },
     {
       "id": "vehicle-token:53",
@@ -12564,7 +12701,9 @@
         -16.08
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "vehicle-token:65",
@@ -12576,7 +12715,9 @@
         -3.93
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "vehicle-token:66",
@@ -12588,7 +12729,9 @@
         -13.09
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "pagoda"
+      ]
     },
     {
       "id": "vehicle-token:67",
@@ -12643,7 +12786,7 @@
       ],
       "tiles": "main",
       "district_ids": [
-        "bluebell-national-park"
+        "fort-meadows"
       ]
     },
     {
@@ -12894,7 +13037,9 @@
         -132.19
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "fort-meadows"
+      ]
     },
     {
       "id": "water-flowers:7",
@@ -12941,45 +13086,12 @@
   ],
   "validation": {
     "unassigned_point_ids": [
-      "atm:0",
-      "atm:15",
-      "boulder:11",
-      "boulder:17",
-      "call-in-point:6",
-      "car-jack:10",
-      "car-jack:11",
       "character-token:0",
       "character-token:1",
-      "character-token:112",
-      "character-token:133",
-      "character-token:153",
-      "character-token:157",
       "character-token:191",
       "character-token:2",
-      "character-token:203",
-      "character-token:208",
-      "character-token:231",
-      "character-token:232",
-      "character-token:259",
-      "character-token:261",
-      "character-token:294",
-      "character-token:37",
       "character-token:51",
-      "character-token:58",
-      "character-token:7",
-      "character-token:72",
-      "character-token:85",
-      "coffee-break:15",
-      "coffee-break:16",
-      "coffee-break:17",
-      "disguise-booth:12",
-      "disguise-booth:15",
-      "fire-extinguished:1",
-      "fire-extinguished:11",
-      "gang:13",
       "helicopter-token:7",
-      "pig:1",
-      "pig:19",
       "police-shield-fragment:0",
       "police-shield-fragment:1",
       "police-shield-fragment:10",
@@ -13012,29 +13124,14 @@
       "police-shield-fragment:9",
       "red-brick:0",
       "red-brick:1",
-      "red-brick:10",
       "red-brick:2",
-      "silver-statue:14",
       "super-build:0",
       "super-build:49",
-      "super-build:50",
-      "super-build:51",
-      "time-trial:10",
-      "time-trial:12",
-      "time-trial:14",
       "vehicle-token:0",
       "vehicle-token:1",
       "vehicle-token:2",
       "vehicle-token:3",
-      "vehicle-token:4",
-      "vehicle-token:44",
-      "vehicle-token:49",
-      "vehicle-token:50",
-      "vehicle-token:52",
-      "vehicle-token:64",
-      "vehicle-token:65",
-      "vehicle-token:66",
-      "water-flowers:6"
+      "vehicle-token:4"
     ],
     "ambiguous_points": [],
     "unknown_district_refs": []
