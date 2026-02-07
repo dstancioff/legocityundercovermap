@@ -14,8 +14,11 @@
         <script>
             var language, debug, tiles;
             var districtLayers = [];
+            var activeDistricts = [];
             var sidebarState = {
                 openCategories: {},
+                openDistricts: {},
+                openDistrictCategories: {},
                 openEntries: {},
             };
 
@@ -36,6 +39,19 @@
                 var showDistricts = document.getElementById('showDistricts');
                 if (!showDistricts) return false;
                 return !!showDistricts.checked;
+            }
+
+            function get_sidebar_grouping() {
+                var grouping = document.getElementById('sidebarGrouping');
+                if (!grouping) return 'category';
+                return grouping.value || 'category';
+            }
+
+            function category_title_text(markers, marker_type) {
+                if (markers[marker_type]["title"] && language in markers[marker_type]["title"]) {
+                    return markers[marker_type]["title"][language];
+                }
+                return marker_type;
             }
 
             function marker_matches_query(markers, marker_type, marker_i) {
@@ -224,6 +240,160 @@
                 return district.title;
             }
 
+            function marker_in_district(marker, district) {
+                if (!marker || !district || !district._bbox) return false;
+                var districtTiles = district.tiles || 'main';
+                if ((marker.tiles || 'main') != districtTiles) return false;
+
+                var lat = marker.coords[0];
+                var lng = marker.coords[1];
+                var b = district._bbox;
+                return (
+                    lat >= b.lat_min &&
+                    lat <= b.lat_max &&
+                    lng >= b.lng_min &&
+                    lng <= b.lng_max
+                );
+            }
+
+            function marker_district_id(marker) {
+                for (var i = 0; i < activeDistricts.length; i++) {
+                    if (marker_in_district(marker, activeDistricts[i])) {
+                        return activeDistricts[i].id;
+                    }
+                }
+                return null;
+            }
+
+            function get_marker_indices(markers, marker_type, includeCompleted, districtId) {
+                var out = [];
+                for (var marker_i in markers[marker_type]["markers"]) {
+                    var marker = markers[marker_type]["markers"][marker_i];
+                    if (marker.tiles != tiles) continue;
+                    if (!marker_matches_query(markers, marker_type, marker_i)) continue;
+
+                    if (districtId !== undefined && districtId !== null) {
+                        var did = marker._district_id ? marker._district_id : '__unassigned';
+                        if (did != districtId) continue;
+                    }
+
+                    if (!includeCompleted && marker.completed) continue;
+                    out.push(marker_i);
+                }
+                return out;
+            }
+
+            function create_sidebar_entry(mymap, markers, marker_type, marker_i) {
+                var marker = markers[marker_type]["markers"][marker_i];
+                var entryId = marker_type + ':' + marker_i;
+
+                var li = document.createElement('li');
+                li.className = 'sidebar-entry';
+                if (marker.completed) {
+                    li.className += ' completed';
+                }
+
+                var row = document.createElement('div');
+                row.className = 'sidebar-entry-row';
+
+                var entryTitle = document.createElement('button');
+                entryTitle.type = 'button';
+                entryTitle.className = 'sidebar-entry-title';
+                entryTitle.textContent = marker_title_text(marker, marker_type);
+                entryTitle.addEventListener('click', function() {
+                    var t = this.getAttribute('data-type');
+                    var i = this.getAttribute('data-index');
+                    focus_marker(mymap, markers[t]["markers"][i]);
+                });
+                entryTitle.setAttribute('data-type', marker_type);
+                entryTitle.setAttribute('data-index', marker_i);
+
+                var actions = document.createElement('div');
+                actions.className = 'sidebar-entry-actions';
+
+                var entryToggle = document.createElement('button');
+                entryToggle.type = 'button';
+                entryToggle.className = 'sidebar-entry-toggle';
+                entryToggle.setAttribute('aria-label', 'Toggle details');
+                entryToggle.textContent = sidebarState.openEntries[entryId] ? '▾' : '▸';
+                entryToggle.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    var t = this.getAttribute('data-type');
+                    var i = this.getAttribute('data-index');
+                    var id = t + ':' + i;
+                    sidebarState.openEntries[id] = !sidebarState.openEntries[id];
+                    build_sidebar(mymap, markers);
+                });
+                entryToggle.setAttribute('data-type', marker_type);
+                entryToggle.setAttribute('data-index', marker_i);
+
+                var locate = document.createElement('button');
+                locate.type = 'button';
+                locate.className = 'sidebar-action sidebar-action-icon';
+                locate.setAttribute('aria-label', 'Show on map');
+                locate.innerHTML = '&#x1F5FA;';
+                locate.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    var t = this.getAttribute('data-type');
+                    var i = this.getAttribute('data-index');
+                    focus_marker(mymap, markers[t]["markers"][i]);
+                });
+                locate.setAttribute('data-type', marker_type);
+                locate.setAttribute('data-index', marker_i);
+
+                var completeWrap = document.createElement('label');
+                completeWrap.className = 'sidebar-complete';
+
+                var complete = document.createElement('input');
+                complete.type = 'checkbox';
+                complete.checked = !!marker.completed;
+                complete.addEventListener('change', function() {
+                    var t = this.getAttribute('data-type');
+                    var i = this.getAttribute('data-index');
+                    set_marker_completed(mymap, markers, t, i, this.checked);
+                });
+                complete.setAttribute('data-type', marker_type);
+                complete.setAttribute('data-index', marker_i);
+
+                var completeLabel = document.createElement('span');
+                completeLabel.textContent = 'Done';
+
+                completeWrap.appendChild(complete);
+                completeWrap.appendChild(completeLabel);
+
+                actions.appendChild(entryToggle);
+                actions.appendChild(locate);
+                actions.appendChild(completeWrap);
+
+                row.appendChild(entryTitle);
+                row.appendChild(actions);
+
+                var details = document.createElement('div');
+                details.className = 'sidebar-entry-details';
+                if (!sidebarState.openEntries[entryId]) {
+                    details.style.display = 'none';
+                }
+
+                var coords = document.createElement('div');
+                coords.className = 'sidebar-entry-coords';
+                coords.textContent = 'Location: [' + marker["coords"][0].toFixed(2) + ', ' + marker["coords"][1].toFixed(2) + ']';
+
+                var desc = document.createElement('div');
+                desc.className = 'sidebar-entry-desc';
+                if (marker.description) {
+                    desc.innerHTML = marker.description;
+                } else {
+                    desc.textContent = '';
+                }
+
+                details.appendChild(coords);
+                details.appendChild(desc);
+
+                li.appendChild(row);
+                li.appendChild(details);
+                return li;
+            }
+
             function update_district_visibility() {
                 var visible = get_show_districts();
                 for (var i = 0; i < districtLayers.length; i++) {
@@ -238,6 +408,7 @@
 
             function initialize_districts(mymap, districtsData) {
                 districtLayers = [];
+                activeDistricts = [];
 
                 var districts = [];
                 if (districtsData) {
@@ -254,6 +425,20 @@
 
                     var districtTiles = district.tiles || 'main';
                     if (districtTiles != tiles) continue;
+
+                    var latVals = [];
+                    var lngVals = [];
+                    for (var p = 0; p < district.path.length; p++) {
+                        latVals.push(district.path[p][0]);
+                        lngVals.push(district.path[p][1]);
+                    }
+                    district._bbox = {
+                        lat_min: Math.min.apply(null, latVals),
+                        lat_max: Math.max.apply(null, latVals),
+                        lng_min: Math.min.apply(null, lngVals),
+                        lng_max: Math.max.apply(null, lngVals),
+                    };
+                    activeDistricts.push(district);
 
                     var style = district.style || {};
                     var layer = L.polygon(district.path, {
@@ -285,32 +470,203 @@
                 if (!sidebar) return;
 
                 var showCompleted = get_show_completed();
+                var grouping = get_sidebar_grouping();
 
                 sidebar.innerHTML = '';
 
                 var markerTypes = Object.keys(markers);
                 markerTypes.sort(function(a, b) {
-                    var at = (markers[a]["title"] && language in markers[a]["title"]) ? markers[a]["title"][language] : a;
-                    var bt = (markers[b]["title"] && language in markers[b]["title"]) ? markers[b]["title"][language] : b;
+                    var at = category_title_text(markers, a);
+                    var bt = category_title_text(markers, b);
                     return at.localeCompare(bt, undefined, { sensitivity: 'base' });
                 });
 
-                var marker_type;
-                for (var idx = 0; idx < markerTypes.length; idx++) {
-                    marker_type = markerTypes[idx];
-                    // Only show categories that have entries for this tileset.
-
-                    var totalCount = 0;
-                    var completeCount = 0;
-                    for (marker_i in markers[marker_type]["markers"]) {
-                        var markerAll = markers[marker_type]["markers"][marker_i];
-                        if (markerAll.tiles != tiles) continue;
-                        if (!marker_matches_query(markers, marker_type, marker_i)) continue;
-                        totalCount += 1;
-                        if (markerAll.completed) completeCount += 1;
+                if (grouping == 'district') {
+                    var districtOrder = [];
+                    for (var d = 0; d < activeDistricts.length; d++) {
+                        districtOrder.push(activeDistricts[d].id);
                     }
+                    districtOrder.sort(function(a, b) {
+                        var da = null;
+                        var db = null;
+                        for (var i = 0; i < activeDistricts.length; i++) {
+                            if (activeDistricts[i].id == a) da = activeDistricts[i];
+                            if (activeDistricts[i].id == b) db = activeDistricts[i];
+                        }
+                        return district_title_text(da).localeCompare(district_title_text(db), undefined, { sensitivity: 'base' });
+                    });
+                    districtOrder.push('__unassigned');
 
-                    if (totalCount == 0) continue;
+                    for (var di = 0; di < districtOrder.length; di++) {
+                        var districtId = districtOrder[di];
+                        var districtObj = null;
+                        if (districtId != '__unassigned') {
+                            for (var ai = 0; ai < activeDistricts.length; ai++) {
+                                if (activeDistricts[ai].id == districtId) {
+                                    districtObj = activeDistricts[ai];
+                                    break;
+                                }
+                            }
+                        }
+
+                        var districtTotal = 0;
+                        var districtComplete = 0;
+                        var districtTypeData = [];
+                        for (var ti = 0; ti < markerTypes.length; ti++) {
+                            var typeId = markerTypes[ti];
+                            var allIdx = get_marker_indices(markers, typeId, true, districtId);
+                            if (allIdx.length == 0) continue;
+                            var done = 0;
+                            for (var ci = 0; ci < allIdx.length; ci++) {
+                                if (markers[typeId]["markers"][allIdx[ci]].completed) done += 1;
+                            }
+                            districtTypeData.push({
+                                marker_type: typeId,
+                                all_indices: allIdx,
+                                visible_indices: get_marker_indices(markers, typeId, showCompleted, districtId),
+                                complete_count: done,
+                            });
+                            districtTotal += allIdx.length;
+                            districtComplete += done;
+                        }
+
+                        if (districtTotal == 0) continue;
+
+                        var districtSection = document.createElement('section');
+                        districtSection.className = 'sidebar-category';
+
+                        var districtHeader = document.createElement('div');
+                        districtHeader.className = 'sidebar-category-header';
+
+                        var districtLeft = document.createElement('div');
+                        districtLeft.className = 'sidebar-category-left';
+
+                        var districtExpand = document.createElement('button');
+                        districtExpand.className = 'sidebar-expand';
+                        districtExpand.type = 'button';
+                        districtExpand.setAttribute('aria-label', 'Toggle district');
+                        districtExpand.textContent = sidebarState.openDistricts[districtId] ? '▾' : '▸';
+                        districtExpand.setAttribute('data-district', districtId);
+                        districtExpand.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            var did = this.getAttribute('data-district');
+                            sidebarState.openDistricts[did] = !sidebarState.openDistricts[did];
+                            build_sidebar(mymap, markers);
+                        });
+
+                        var districtTitle = document.createElement('div');
+                        districtTitle.className = 'sidebar-category-title';
+                        districtTitle.textContent = districtId == '__unassigned' ? 'Unassigned' : district_title_text(districtObj);
+
+                        var districtCounts = document.createElement('div');
+                        districtCounts.className = 'sidebar-category-counts';
+                        districtCounts.textContent = districtComplete + ' / ' + districtTotal;
+
+                        districtLeft.appendChild(districtExpand);
+                        districtLeft.appendChild(districtTitle);
+                        districtHeader.appendChild(districtLeft);
+                        districtHeader.appendChild(districtCounts);
+                        districtSection.appendChild(districtHeader);
+
+                        var districtProgress = document.createElement('div');
+                        districtProgress.className = 'sidebar-category-progress';
+                        var districtFill = document.createElement('div');
+                        districtFill.className = 'sidebar-category-progress-fill';
+                        districtFill.style.width = ((districtComplete / districtTotal) * 100).toFixed(1) + '%';
+                        districtProgress.appendChild(districtFill);
+                        districtSection.appendChild(districtProgress);
+
+                        var districtContent = document.createElement('div');
+                        if (!sidebarState.openDistricts[districtId]) {
+                            districtContent.style.display = 'none';
+                        }
+
+                        for (var dt = 0; dt < districtTypeData.length; dt++) {
+                            var typeData = districtTypeData[dt];
+                            var catKey = districtId + ':' + typeData.marker_type;
+
+                            var catWrap = document.createElement('div');
+                            catWrap.className = 'sidebar-district-category';
+                            if (markers[typeData.marker_type].visibility != 'visible') {
+                                catWrap.className += ' is-hidden';
+                            }
+
+                            var catHeader = document.createElement('div');
+                            catHeader.className = 'sidebar-category-header';
+
+                            var catLeft = document.createElement('div');
+                            catLeft.className = 'sidebar-category-left';
+
+                            var catVis = document.createElement('button');
+                            catVis.type = 'button';
+                            catVis.className = 'sidebar-visibility';
+                            catVis.setAttribute('aria-label', 'Show/hide category on map');
+                            catVis.textContent = markers[typeData.marker_type].visibility == 'visible' ? '👁' : '🚫';
+                            catVis.setAttribute('data-type', typeData.marker_type);
+                            catVis.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                var t = this.getAttribute('data-type');
+                                markers[t].visibility = markers[t].visibility == 'visible' ? 'hidden' : 'visible';
+                                update_markers(mymap, markers);
+                                update_toggle_all_button(markers);
+                                build_sidebar(mymap, markers);
+                            });
+
+                            var catExpand = document.createElement('button');
+                            catExpand.className = 'sidebar-expand';
+                            catExpand.type = 'button';
+                            catExpand.setAttribute('aria-label', 'Toggle category');
+                            catExpand.textContent = sidebarState.openDistrictCategories[catKey] ? '▾' : '▸';
+                            catExpand.setAttribute('data-key', catKey);
+                            catExpand.addEventListener('click', function(ev) {
+                                ev.preventDefault();
+                                var key = this.getAttribute('data-key');
+                                sidebarState.openDistrictCategories[key] = !sidebarState.openDistrictCategories[key];
+                                build_sidebar(mymap, markers);
+                            });
+
+                            var catTitle = document.createElement('div');
+                            catTitle.className = 'sidebar-category-title';
+                            catTitle.textContent = category_title_text(markers, typeData.marker_type);
+
+                            var catCounts = document.createElement('div');
+                            catCounts.className = 'sidebar-category-counts';
+                            catCounts.textContent = typeData.complete_count + ' / ' + typeData.all_indices.length;
+
+                            catLeft.appendChild(catVis);
+                            catLeft.appendChild(catExpand);
+                            catLeft.appendChild(catTitle);
+                            catHeader.appendChild(catLeft);
+                            catHeader.appendChild(catCounts);
+                            catWrap.appendChild(catHeader);
+
+                            var pointList = document.createElement('ul');
+                            pointList.className = 'sidebar-entry-list';
+                            if (!sidebarState.openDistrictCategories[catKey]) {
+                                pointList.style.display = 'none';
+                            }
+                            for (var vi = 0; vi < typeData.visible_indices.length; vi++) {
+                                pointList.appendChild(create_sidebar_entry(mymap, markers, typeData.marker_type, typeData.visible_indices[vi]));
+                            }
+                            catWrap.appendChild(pointList);
+                            districtContent.appendChild(catWrap);
+                        }
+
+                        districtSection.appendChild(districtContent);
+                        sidebar.appendChild(districtSection);
+                    }
+                    return;
+                }
+
+                for (var idx = 0; idx < markerTypes.length; idx++) {
+                    var marker_type = markerTypes[idx];
+                    var allIndices = get_marker_indices(markers, marker_type, true, null);
+                    if (allIndices.length == 0) continue;
+
+                    var completeCount = 0;
+                    for (var c = 0; c < allIndices.length; c++) {
+                        if (markers[marker_type]["markers"][allIndices[c]].completed) completeCount += 1;
+                    }
 
                     var section = document.createElement('section');
                     section.className = 'sidebar-category';
@@ -329,186 +685,61 @@
                     expand.type = 'button';
                     expand.setAttribute('aria-label', 'Toggle category');
                     expand.textContent = sidebarState.openCategories[marker_type] ? '▾' : '▸';
-
+                    expand.setAttribute('data-type', marker_type);
                     expand.addEventListener('click', function(ev) {
                         ev.preventDefault();
                         var t = this.getAttribute('data-type');
                         sidebarState.openCategories[t] = !sidebarState.openCategories[t];
-                        update_toggle_all_button(markers);
-                build_sidebar(mymap, markers);
+                        build_sidebar(mymap, markers);
                     });
-                    expand.setAttribute('data-type', marker_type);
 
                     var vis = document.createElement('button');
                     vis.type = 'button';
                     vis.className = 'sidebar-visibility';
                     vis.setAttribute('aria-label', 'Show/hide category on map');
                     vis.textContent = markers[marker_type].visibility == 'visible' ? '👁' : '🚫';
+                    vis.setAttribute('data-type', marker_type);
                     vis.addEventListener('click', function(ev) {
                         ev.preventDefault();
                         var t = this.getAttribute('data-type');
                         markers[t].visibility = markers[t].visibility == 'visible' ? 'hidden' : 'visible';
                         update_markers(mymap, markers);
                         update_toggle_all_button(markers);
-                build_sidebar(mymap, markers);
+                        build_sidebar(mymap, markers);
                     });
-                    vis.setAttribute('data-type', marker_type);
 
                     var title = document.createElement('div');
                     title.className = 'sidebar-category-title';
-                    if (language in markers[marker_type]["title"]) {
-                        title.textContent = markers[marker_type]["title"][language];
-                    } else {
-                        title.textContent = marker_type;
-                    }
+                    title.textContent = category_title_text(markers, marker_type);
 
                     var counts = document.createElement('div');
                     counts.className = 'sidebar-category-counts';
-                    counts.textContent = completeCount + ' / ' + totalCount;
+                    counts.textContent = completeCount + ' / ' + allIndices.length;
 
                     left.appendChild(vis);
                     left.appendChild(expand);
                     left.appendChild(title);
-
                     header.appendChild(left);
                     header.appendChild(counts);
-
                     section.appendChild(header);
 
                     var progress = document.createElement('div');
                     progress.className = 'sidebar-category-progress';
-
                     var progressFill = document.createElement('div');
                     progressFill.className = 'sidebar-category-progress-fill';
-                    progressFill.style.width = ((completeCount / totalCount) * 100).toFixed(1) + '%';
-
+                    progressFill.style.width = ((completeCount / allIndices.length) * 100).toFixed(1) + '%';
                     progress.appendChild(progressFill);
                     section.appendChild(progress);
- 
+
                     var list = document.createElement('ul');
                     list.className = 'sidebar-entry-list';
-
                     if (!sidebarState.openCategories[marker_type]) {
                         list.style.display = 'none';
                     }
 
-                    // Use the full markers list to keep indices stable.
-                    for (marker_i in markers[marker_type]["markers"]) {
-                        var marker = markers[marker_type]["markers"][marker_i];
-                        if (marker.tiles != tiles) continue;
-
-                        if (!marker_matches_query(markers, marker_type, marker_i)) continue;
-                        if (!showCompleted && marker.completed) continue;
-
-                        var entryId = marker_type + ':' + marker_i;
-
-                        var li = document.createElement('li');
-                        li.className = 'sidebar-entry';
-                        if (marker.completed) {
-                            li.className += ' completed';
-                        }
-
-                        var row = document.createElement('div');
-                        row.className = 'sidebar-entry-row';
-
-                        var entryTitle = document.createElement('button');
-                        entryTitle.type = 'button';
-                        entryTitle.className = 'sidebar-entry-title';
-                        entryTitle.textContent = marker_title_text(marker, marker_type);
-                        entryTitle.addEventListener('click', function() {
-                            var t = this.getAttribute('data-type');
-                            var i = this.getAttribute('data-index');
-                            focus_marker(mymap, markers[t]["markers"][i]);
-                        });
-                        entryTitle.setAttribute('data-type', marker_type);
-                        entryTitle.setAttribute('data-index', marker_i);
-
-                        var actions = document.createElement('div');
-                        actions.className = 'sidebar-entry-actions';
-
-                        var entryToggle = document.createElement('button');
-                        entryToggle.type = 'button';
-                        entryToggle.className = 'sidebar-entry-toggle';
-                        entryToggle.setAttribute('aria-label', 'Toggle details');
-                        entryToggle.textContent = sidebarState.openEntries[entryId] ? '▾' : '▸';
-                        entryToggle.addEventListener('click', function(ev) {
-                            ev.preventDefault();
-                            var t = this.getAttribute('data-type');
-                            var i = this.getAttribute('data-index');
-                            var id = t + ':' + i;
-                            sidebarState.openEntries[id] = !sidebarState.openEntries[id];
-                            update_toggle_all_button(markers);
-                build_sidebar(mymap, markers);
-                        });
-                        entryToggle.setAttribute('data-type', marker_type);
-                        entryToggle.setAttribute('data-index', marker_i);
-
-                        var locate = document.createElement('button');
-                        locate.type = 'button';
-                        locate.className = 'sidebar-action sidebar-action-icon';
-                        locate.setAttribute('aria-label', 'Show on map');
-                        locate.innerHTML = '&#x1F5FA;';
-                        locate.addEventListener('click', function(ev) {
-                            ev.preventDefault();
-                            var t = this.getAttribute('data-type');
-                            var i = this.getAttribute('data-index');
-                            focus_marker(mymap, markers[t]["markers"][i]);
-                        });
-                        locate.setAttribute('data-type', marker_type);
-                        locate.setAttribute('data-index', marker_i);
-
-                        var completeWrap = document.createElement('label');
-                        completeWrap.className = 'sidebar-complete';
-
-                        var complete = document.createElement('input');
-                        complete.type = 'checkbox';
-                        complete.checked = !!marker.completed;
-                        complete.addEventListener('change', function() {
-                            var t = this.getAttribute('data-type');
-                            var i = this.getAttribute('data-index');
-                            set_marker_completed(mymap, markers, t, i, this.checked);
-                        });
-                        complete.setAttribute('data-type', marker_type);
-                        complete.setAttribute('data-index', marker_i);
-
-                        var completeLabel = document.createElement('span');
-                        completeLabel.textContent = 'Done';
-
-                        completeWrap.appendChild(complete);
-                        completeWrap.appendChild(completeLabel);
-
-                        actions.appendChild(entryToggle);
-                        actions.appendChild(locate);
-                        actions.appendChild(completeWrap);
-
-                        row.appendChild(entryTitle);
-                        row.appendChild(actions);
-
-                        var details = document.createElement('div');
-                        details.className = 'sidebar-entry-details';
-                        if (!sidebarState.openEntries[entryId]) {
-                            details.style.display = 'none';
-                        }
-
-                        var coords = document.createElement('div');
-                        coords.className = 'sidebar-entry-coords';
-                        coords.textContent = 'Location: [' + marker["coords"][0].toFixed(2) + ', ' + marker["coords"][1].toFixed(2) + ']';
-
-                        var desc = document.createElement('div');
-                        desc.className = 'sidebar-entry-desc';
-                        if (marker.description) {
-                            // Existing descriptions contain HTML links in a few places.
-                            desc.innerHTML = marker.description;
-                        } else {
-                            desc.textContent = '';
-                        }
-
-                        details.appendChild(coords);
-                        details.appendChild(desc);
-
-                        li.appendChild(row);
-                        li.appendChild(details);
-                        list.appendChild(li);
+                    var visibleIndices = get_marker_indices(markers, marker_type, showCompleted, null);
+                    for (var vi2 = 0; vi2 < visibleIndices.length; vi2++) {
+                        list.appendChild(create_sidebar_entry(mymap, markers, marker_type, visibleIndices[vi2]));
                     }
 
                     section.appendChild(list);
@@ -663,6 +894,7 @@
                         if (!marker.tiles) {
                             marker.tiles = "main";
                         }
+                        marker._district_id = marker_district_id(marker);
                         if (marker.tiles != tiles) {
                             continue;
                         }
@@ -759,6 +991,13 @@
                 if (showDistricts) {
                     showDistricts.addEventListener('change', function() {
                         update_district_visibility();
+                    });
+                }
+
+                var sidebarGrouping = document.getElementById('sidebarGrouping');
+                if (sidebarGrouping) {
+                    sidebarGrouping.addEventListener('change', function() {
+                        build_sidebar(mymap, markers);
                     });
                 }
 
@@ -871,6 +1110,14 @@
                 outline: none;
                 border-color: rgba(0,0,0,0.28);
                 box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+            }
+
+            .sidebar-select {
+                border: 1px solid rgba(0,0,0,0.14);
+                background: rgba(255,255,255,0.95);
+                border-radius: 9px;
+                padding: 6px 10px;
+                font: 12px/14px Arial, Helvetica, sans-serif;
             }
 
             .sidebar-filters label {
@@ -1068,6 +1315,17 @@
                 padding: 0 10px 12px 10px;
             }
 
+            .sidebar-district-category {
+                margin: 0 8px 8px 8px;
+                border: 1px solid rgba(0,0,0,0.07);
+                border-radius: 8px;
+                background: rgba(255,255,255,0.7);
+            }
+
+            .sidebar-district-category.is-hidden {
+                opacity: 0.65;
+            }
+
             .sidebar-action {
                 border: 1px solid rgba(0,0,0,0.14);
                 background: rgba(255,255,255,0.9);
@@ -1220,6 +1478,10 @@
                     <h2>Items</h2>
                     <div class="sidebar-filters">
                         <input id="sidebarSearch" class="sidebar-search" type="search" placeholder="Search..." autocomplete="off" spellcheck="false">
+                        <select id="sidebarGrouping" class="sidebar-select">
+                            <option value="category">Category -> Point</option>
+                            <option value="district">District -> Category -> Point</option>
+                        </select>
                         <button id="toggleAll" type="button" class="sidebar-top-action">Hide all</button>
                         <label>
                             <input id="hideCompleted" type="checkbox" checked>

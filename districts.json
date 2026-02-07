@@ -46,7 +46,7 @@
             "id": "crescent-park",
             "title": {"en": "Crescent Park"},
             "tiles": "main",
-            "path": [[66, -18], [66, -6], [50, -6], [50, -18]]
+            "path": [[66, -30], [66, -6], [50, -6], [50, -30]]
         },
         {
             "id": "lego-city-airport",

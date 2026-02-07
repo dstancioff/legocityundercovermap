@@ -4,8 +4,8 @@
     "source_districts": "districts.json",
     "total_points": 866,
     "district_count": 22,
-    "assigned_point_count": 765,
-    "unassigned_point_count": 101,
+    "assigned_point_count": 772,
+    "unassigned_point_count": 94,
     "ambiguous_point_count": 0
   },
   "districts": [
@@ -389,23 +389,30 @@
         "en": "Crescent Park"
       },
       "tiles": "main",
-      "point_count": 15,
+      "point_count": 22,
       "point_ids": [
         "alien:3",
         "atm:4",
         "cat:3",
         "character-token:185",
         "character-token:194",
+        "character-token:196",
+        "character-token:209",
+        "character-token:218",
         "character-token:225",
         "character-token:254",
         "character-token:301",
+        "character-token:302",
         "character-token:69",
         "character-token:77",
+        "character-token:82",
         "disguise-booth:13",
+        "ferry:1",
         "fire-extinguished:4",
         "free-run:5",
         "silver-statue:2",
-        "train-station:2"
+        "train-station:2",
+        "vehicle-token:24"
       ]
     },
     {
@@ -4029,7 +4036,9 @@
         -21.01
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "character-token:197",
@@ -4231,7 +4240,9 @@
         -21.98
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "character-token:21",
@@ -4369,7 +4380,9 @@
         -25.99
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "character-token:219",
@@ -5673,7 +5686,9 @@
         -24.27
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "character-token:303",
@@ -6753,7 +6768,9 @@
         -24.27
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "character-token:83",
@@ -8195,7 +8212,9 @@
         -22.94
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "ferry:2",
@@ -11941,7 +11960,9 @@
         -21.81
       ],
       "tiles": "main",
-      "district_ids": []
+      "district_ids": [
+        "crescent-park"
+      ]
     },
     {
       "id": "vehicle-token:25",
@@ -12934,31 +12955,25 @@
       "character-token:153",
       "character-token:157",
       "character-token:191",
-      "character-token:196",
       "character-token:2",
       "character-token:203",
       "character-token:208",
-      "character-token:209",
-      "character-token:218",
       "character-token:231",
       "character-token:232",
       "character-token:259",
       "character-token:261",
       "character-token:294",
-      "character-token:302",
       "character-token:37",
       "character-token:51",
       "character-token:58",
       "character-token:7",
       "character-token:72",
-      "character-token:82",
       "character-token:85",
       "coffee-break:15",
       "coffee-break:16",
       "coffee-break:17",
       "disguise-booth:12",
       "disguise-booth:15",
-      "ferry:1",
       "fire-extinguished:1",
       "fire-extinguished:11",
       "gang:13",
@@ -13010,7 +13025,6 @@
       "vehicle-token:0",
       "vehicle-token:1",
       "vehicle-token:2",
-      "vehicle-token:24",
       "vehicle-token:3",
       "vehicle-token:4",
       "vehicle-token:44",
