@@ -290,41 +290,85 @@
                 }
             }
 
+            function pretty_point_name(text) {
+                var out = (text || '').toString();
+                out = out.replace(/[_-]+/g, ' ');
+                out = out.replace(/\s+/g, ' ').trim();
+                if (!out) return '';
+                return out.toLowerCase().replace(/\b([a-z])/g, function(_, c) {
+                    return c.toUpperCase();
+                });
+            }
+
             function marker_title_text(marker, marker_type) {
                 if (marker.title) {
                     if (marker.title.constructor == Object) {
                         if (language in marker.title) {
-                            return marker.title[language];
+                            return pretty_point_name(marker.title[language]);
                         }
-                        return marker_type;
+                        return pretty_point_name(marker_type);
                     }
-                    return marker.title;
+                    return pretty_point_name(marker.title);
                 }
-                return marker_type;
+                return pretty_point_name(marker_type);
             }
 
-            function get_show_cursor_coords() {
-                var showCursorCoords = document.getElementById('showCursorCoords');
-                if (!showCursorCoords) return false;
-                return !!showCursorCoords.checked;
+            function set_popup_complete_toggle_state(button, completed) {
+                if (!button) return;
+                if (completed) {
+                    button.textContent = 'Completed';
+                    L.DomUtil.addClass(button, 'is-on');
+                } else {
+                    button.textContent = 'Mark Complete';
+                    L.DomUtil.removeClass(button, 'is-on');
+                }
             }
 
             function format_coords(latlng) {
                 return '[' + latlng.lat.toFixed(2) + ', ' + latlng.lng.toFixed(2) + ']';
             }
 
+            function point_in_polygon(latlng, path) {
+                var x = latlng.lng;
+                var y = latlng.lat;
+                var inside = false;
+                for (var i = 0, j = path.length - 1; i < path.length; j = i++) {
+                    var xi = path[i][1], yi = path[i][0];
+                    var xj = path[j][1], yj = path[j][0];
+                    var intersect = ((yi > y) != (yj > y)) &&
+                        (x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-9) + xi);
+                    if (intersect) inside = !inside;
+                }
+                return inside;
+            }
+
+            function district_under_cursor(latlng) {
+                for (var i = 0; i < activeDistricts.length; i++) {
+                    var district = activeDistricts[i];
+                    if (!district || !district.path || district.path.length < 3) continue;
+                    if (district._bbox) {
+                        if (latlng.lat < district._bbox.lat_min || latlng.lat > district._bbox.lat_max) continue;
+                        if (latlng.lng < district._bbox.lng_min || latlng.lng > district._bbox.lng_max) continue;
+                    }
+                    if (point_in_polygon(latlng, district.path)) {
+                        return district;
+                    }
+                }
+                return null;
+            }
+
             function update_cursor_coords(latlng) {
                 var el = document.getElementById('cursorCoords');
                 if (!el) return;
 
-                if (!get_show_cursor_coords()) {
-                    el.style.display = 'none';
-                    return;
-                }
-
                 el.style.display = 'block';
                 if (latlng) {
-                    el.textContent = 'Cursor: ' + format_coords(latlng);
+                    var district = district_under_cursor(latlng);
+                    var text = 'Coords: ' + format_coords(latlng);
+                    if (district) {
+                        text = 'District: ' + district_title_text(district) + ' | ' + text;
+                    }
+                    el.textContent = text;
                 } else {
                     el.textContent = 'Cursor: --';
                 }
@@ -1069,19 +1113,20 @@
 
                         L.DomUtil.create('br', '', container);
 
-                        var complete = L.DomUtil.create('a', '', container);
-                        complete.href = '#';
-                        complete.innerHTML = 'complete';
-                        complete.id = 'complete';
+                        var complete = L.DomUtil.create('button', 'popup-complete-toggle', container);
+                        complete.type = 'button';
+                        set_popup_complete_toggle_state(complete, !!marker.completed);
 
                         if (marker.completed) {
                             L.DomUtil.addClass(container, "completed");
                         }
 
                         L.DomEvent.disableClickPropagation(complete);
-                        L.DomEvent.on(complete, 'click', function() {
+                        L.DomEvent.on(complete, 'click', function(ev) {
+                            L.DomEvent.preventDefault(ev);
                             var popup = this.marker.getPopup();
                             var container = popup.getContent();
+                            var button = ev.currentTarget || ev.target;
 
                             var nextCompleted = !L.DomUtil.hasClass(container, 'completed');
                             if (nextCompleted) {
@@ -1089,6 +1134,7 @@
                             } else {
                                 L.DomUtil.removeClass(container, 'completed');
                             }
+                            set_popup_complete_toggle_state(button, nextCompleted);
                             popup.update();
 
                             set_marker_completed(mymap, markers, this._marker_type, this._marker_i, nextCompleted);
@@ -1117,13 +1163,7 @@
                     });
                 }
 
-                var showCursorCoords = document.getElementById('showCursorCoords');
-                if (showCursorCoords) {
-                    showCursorCoords.addEventListener('change', function() {
-                        update_cursor_coords(null);
-                    });
-                    update_cursor_coords(null);
-                }
+                update_cursor_coords(null);
 
                 var showDistricts = document.getElementById('showDistricts');
                 if (showDistricts) {
@@ -1553,8 +1593,26 @@
                 text-decoration: none !important;
             }
 
-            .completed #complete {
-                text-decoration: line-through;
+            .popup-complete-toggle {
+                border: 1px solid rgba(0,0,0,0.2);
+                border-radius: 999px;
+                background: #f3f5f7;
+                color: #2d3a45;
+                font: 12px/14px Arial, Helvetica, sans-serif;
+                font-weight: 600;
+                padding: 5px 11px;
+                cursor: pointer;
+                transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+            }
+
+            .popup-complete-toggle:hover {
+                background: #e7edf1;
+            }
+
+            .popup-complete-toggle.is-on {
+                background: #2f7f45;
+                border-color: #2f7f45;
+                color: #fff;
             }
 
             .leaflet-tooltip.marker-label {
@@ -1658,10 +1716,6 @@
                         <label>
                             <input id="showDistricts" type="checkbox">
                             <span>Show districts</span>
-                        </label>
-                        <label>
-                            <input id="showCursorCoords" type="checkbox" checked>
-                            <span>Show cursor coords</span>
                         </label>
                     </div>
                 </div>
